@@ -123,7 +123,8 @@ public:
     void set_column(const t_str& name, t_col_sptr col);
 
     t_column* add_column(const t_str& cname, t_dtype dtype, t_bool status_enabled);
-
+    t_column* promote_column(const t_str& cname, t_dtype new_dtype, t_int32 iter_limit);
+    
     t_col_sptr make_column(const t_str& colname, t_dtype dtype, t_bool status_enabled);
     void verify() const;
     void set_capacity(t_uindex idx);

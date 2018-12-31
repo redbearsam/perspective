@@ -396,7 +396,7 @@ col_to_js_typed_array(T ctx, t_tvidx idx) {
 }
 
 void
-_fill_col_numeric(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_numeric(val accessor, t_table& tbl, t_col_sptr col, t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
     t_uindex nrows = col->size();
 
     if (is_arrow) {
@@ -441,25 +441,25 @@ _fill_col_numeric(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bo
                     col->set_nth(i, item.as<t_int16>());
                 } break;
                 case DTYPE_INT32: {
-                    /*
                     // This handles cases where a long sequence of e.g. 0 precedes a clearly
                     // float value in an inferred column. Would not be needed if the type
-                    inference
-                    // checked the entire column/we could reset parsing.
-                    
+                    // inference checked the entire column/we could reset parsing.
                     t_float64 fval = item.as<t_float64>();
                     if (fval > 2147483647 || fval < -2147483648) {
+                        tbl.promote_column(name, DTYPE_FLOAT64, i);
                         col->set_nth(i, fval);
+                        std::cout << "int to float: " + std::to_string(*(col->get_nth<t_float64>(i))) << std::endl;
                     } else {
-                    }*/
-
-                    col->set_nth(i, item.as<t_int32>());
+                        col->set_nth(i, item.as<t_int32>());
+                        std::cout << "int: " + std::to_string(*(col->get_nth<t_int32>(i))) << std::endl;
+                    }     
                 } break;
                 case DTYPE_FLOAT32: {
                     col->set_nth(i, item.as<t_float32>());
                 } break;
                 case DTYPE_FLOAT64: {
                     col->set_nth(i, item.as<t_float64>());
+                    std::cout << "float: " + std::to_string(*(col->get_nth<t_float64>(i))) << std::endl;
                 } break;
                 default:
                     break;
@@ -469,7 +469,7 @@ _fill_col_numeric(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bo
 }
 
 void
-_fill_col_int64(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_int64(val accessor, t_col_sptr col, t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
     t_uindex nrows = col->size();
 
     if (is_arrow) {
@@ -483,7 +483,7 @@ _fill_col_int64(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool
 }
 
 void
-_fill_col_time(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_time(val accessor, t_col_sptr col, t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
     t_uindex nrows = col->size();
 
     if (is_arrow) {
@@ -524,7 +524,7 @@ _fill_col_time(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool 
 }
 
 void
-_fill_col_date(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_date(val accessor, t_col_sptr col, t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
     t_uindex nrows = col->size();
 
     if (is_arrow) {
@@ -563,7 +563,7 @@ _fill_col_date(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool 
 }
 
 void
-_fill_col_bool(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_bool(val accessor, t_col_sptr col, t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
     t_uindex nrows = col->size();
 
     if (is_arrow) {
@@ -593,7 +593,7 @@ _fill_col_bool(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool 
 }
 
 void
-_fill_col_string(val accessor, t_col_sptr col, t_int32 cidx, t_dtype type, t_bool is_arrow) {
+_fill_col_string(val accessor, t_col_sptr col,  t_str name, t_int32 cidx, t_dtype type, t_bool is_arrow) {
 
     t_uindex nrows = col->size();
 
@@ -691,25 +691,25 @@ _fill_data(t_table& tbl, t_svec ocolnames, val accessor, std::vector<t_dtype> od
 
         switch (col_type) {
             case DTYPE_INT64: {
-                _fill_col_int64(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_int64(dcol, col, name, cidx, col_type, is_arrow);
             } break;
             case DTYPE_BOOL: {
-                _fill_col_bool(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_bool(dcol, col, name, cidx, col_type, is_arrow);
             } break;
             case DTYPE_DATE: {
-                _fill_col_date(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_date(dcol, col, name, cidx, col_type, is_arrow);
             } break;
             case DTYPE_TIME: {
-                _fill_col_time(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_time(dcol, col, name, cidx, col_type, is_arrow);
             } break;
             case DTYPE_STR: {
-                _fill_col_string(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_string(dcol, col, name, cidx, col_type, is_arrow);
             } break;
             case DTYPE_NONE: {
                 break;
             }
             default:
-                _fill_col_numeric(dcol, col, cidx, col_type, is_arrow);
+                _fill_col_numeric(dcol, tbl, col, name, cidx, col_type, is_arrow);
         }
 
         if (is_arrow) {

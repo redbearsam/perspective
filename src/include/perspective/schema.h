@@ -41,6 +41,7 @@ struct PERSPECTIVE_EXPORT t_schema {
     t_bool operator==(const t_schema& rhs) const;
 
     void add_column(const t_str& colname, t_dtype dtype);
+    void retype_column(const t_str& colname, t_dtype dtype);
     t_schema_recipe get_recipe() const;
     t_bool has_column(const t_str& cname) const;
     const t_svec& columns() const;
