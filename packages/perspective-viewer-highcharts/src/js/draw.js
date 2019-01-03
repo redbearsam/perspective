@@ -37,6 +37,11 @@ function get_or_create_element(div) {
     return perspective_highcharts_element;
 }
 
+function logWithLabel(label, toLog) {
+  console.log(label + ":");
+  console.log(toLog);
+}
+
 export const draw = mode =>
     async function(el, view, task) {
         // FIXME: super tight coupling to private viewer methods
@@ -241,12 +246,16 @@ class HighchartsElement extends HTMLElement {
     }
 
     resize() {
+        console.log("resizing");
+        logWithLabel("charts", this._charts);
         if (this._charts && this._charts.length > 0) {
             this._charts.map(x => x.reflow());
         }
     }
 
     remove() {
+      console.log("removing");
+      logWithLabel("charts", this._charts);
         this._charts = [];
         for (let e of Array.prototype.slice.call(this._container.children)) {
             if (e.tagName === "DIV") {
@@ -256,6 +265,8 @@ class HighchartsElement extends HTMLElement {
     }
 
     delete() {
+      console.log("deleting");
+      logWithLabel("charts", this._charts);
         for (let chart of this._charts) {
             try {
                 chart.destroy();
