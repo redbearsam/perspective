@@ -200,6 +200,7 @@ class HighchartsElement extends HTMLElement {
     }
 
     render(mode, configs, callee) {
+        // if charts.length is greater than 0 update each chart.
         if (this._charts.length > 0) {
             let idx = 0;
             for (let chart of this._charts) {
@@ -216,6 +217,7 @@ class HighchartsElement extends HTMLElement {
                     chart.update(opts);
                 }
             }
+        // if charts.length is 0 then remove the html element containing any pre-existing charts, and add a new chart for each config to the _charts object, as well as appending them to the html page.
         } else {
             this.remove();
             for (let config of configs) {
@@ -225,11 +227,14 @@ class HighchartsElement extends HTMLElement {
                 this._charts.push(() => Highcharts.chart(chart, config));
             }
 
+            //for each chart in _charts execute itself!?
             for (let i = 0; i < this._charts.length; i++) {
-                this._charts[i] = this._charts[i]();
+                logWithLabel(`chart[${i}]`, this._charts[i]);
+                this._charts[i] = this._charts[i](); // WTF does this mean?
             }
         }
 
+        //remove any charts that don't have a renderTo method. WHY?! When would a chart lack a renderTo mechanism?
         if (!this._charts.every(x => this._container.contains(x.renderTo))) {
             this.remove();
             this._charts.map(x => this._container.appendChild(x.renderTo));
@@ -247,7 +252,7 @@ class HighchartsElement extends HTMLElement {
 
     resize() {
         console.log("resizing");
-        logWithLabel("charts", this._charts);
+        if (this._charts) { logWithLabel("charts", this._charts); }
         if (this._charts && this._charts.length > 0) {
             this._charts.map(x => x.reflow());
         }
@@ -255,7 +260,7 @@ class HighchartsElement extends HTMLElement {
 
     remove() {
       console.log("removing");
-      logWithLabel("charts", this._charts);
+      if (this._charts) { logWithLabel("charts", this._charts); }
         this._charts = [];
         for (let e of Array.prototype.slice.call(this._container.children)) {
             if (e.tagName === "DIV") {
@@ -266,7 +271,7 @@ class HighchartsElement extends HTMLElement {
 
     delete() {
       console.log("deleting");
-      logWithLabel("charts", this._charts);
+      if (this._charts) { logWithLabel("charts", this._charts); }
         for (let chart of this._charts) {
             try {
                 chart.destroy();

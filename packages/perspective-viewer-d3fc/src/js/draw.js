@@ -8,7 +8,7 @@
  */
 
 
-
+import * as fc from "d3fc";
 import * as d3 from "d3";
 
 import style from "../less/d3fc.less";
@@ -21,9 +21,20 @@ import { detectIE } from "@jpmorganchase/perspective/src/js/utils";
 
 export const PRIVATE = Symbol("D3FC private");
 
+//temporary method to log a label alongside a value for easier troubleshooting.
 function logWithLabel(label, toLog) {
   console.log(label + ":");
   console.log(toLog);
+}
+
+//temporary method to log some useful data for testing.
+function logSomeStuff(mode, perspecViewerEl, view, cols) {
+  console.log(`mode is ${mode}`);
+  logWithLabel("perspectiveViewerElement", perspecViewerEl);
+  logWithLabel("view", view);  //show the data structure as it is ingested?
+  logWithLabel("cols", cols); //cols is the default column values
+  logWithLabel("aggregates", view._config.aggregate);
+  logWithLabel("row_pivot", view._config.row_pivot);
 }
 
 function get_or_create_element(div) {
@@ -42,35 +53,53 @@ function get_or_create_element(div) {
   return perspective_d3fc_element;
 }
 
-async function drawXBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden) {
+async function drawStaticBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden) {
   //NB: this is a placeholder. It just draws a constant thing atm.
   const cols = await view.to_columns();
-  console.log("mode is xbar");
-  logWithLabel("perspectiveViewerElement", perspecViewerEl);
-  logWithLabel("view", view);  //show the data structure as it is ingested?
-  logWithLabel("cols", cols); //cols is the default column values
-  logWithLabel("aggregates", view._config.aggregate);
-  logWithLabel("row_pivot", view._config.row_pivot);
+  logSomeStuff(mode, perspecViewerEl, view, cols);
 
   const config = (configs[0] = default_config.call(perspecViewerEl, aggregates, mode));
   return config;
 }
 
-async function drawYBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
+async function drawXBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
   const cols = await view.to_columns();
-  console.log("mode is ybar");
-  logWithLabel("perspectiveViewerElement", perspecViewerEl);
-  logWithLabel("view", view);  //show the data structure as it is ingested?
-  logWithLabel("cols", cols); //cols is the default column values
-  logWithLabel("aggregates", view._config.aggregate);
-  logWithLabel("row_pivot", view._config.row_pivot);
+  logSomeStuff(mode, perspecViewerEl, view, cols);
 
   const config = (configs[0] = default_config.call(perspecViewerEl, aggregates, mode));
 
-  //COPIED DIRECTLY FROM HIGHCHARTS VERSION
+  let [series, top] = make_y_data(cols, row_pivots, hidden);
+  config.series = series;
+  //config.colors = series.length <= 10 ? COLORS_10 : COLORS_20; //todo: ignore for now.
+  config.legend.enabled = col_pivots.length > 0 || series.length > 1; //todo: ignore for now.
+  config.legend.floating = series.length <= 20; //todo: ignore for now.
+  config.plotOptions.series.dataLabels = { //todo: ignore for now.
+    allowOverlap: false,
+    padding: 10
+  };
+  set_category_axis(config, "xAxis", typesAndNames.xtree_type, top);
+  Object.assign(config, {
+    yAxis: {
+      startOnTick: false,
+      endOnTick: false,
+      title: {
+        text: aggregates.map(x => x.column).join(",  "),
+        style: { color: "#666666", fontSize: "14px" }
+      },
+      labels: { overflow: "justify" }
+    }
+  });
 
-  //let config = (configs[0] = default_config.call(this, aggregates, mode));
-  //let cols = await view.to_columns();
+  logWithLabel("config", config);
+  return config;
+}
+
+async function drawYBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
+  const cols = await view.to_columns();
+  logSomeStuff(mode, perspecViewerEl, view, cols);
+
+  const config = (configs[0] = default_config.call(perspecViewerEl, aggregates, mode));
+
   let [series, top] = make_y_data(cols, row_pivots, hidden);
   config.series = series;
   //config.colors = series.length <= 10 ? COLORS_10 : COLORS_20; //todo: ignore for now.
@@ -105,6 +134,11 @@ export const draw = mode =>
     const aggregates = this._get_view_aggregates();
     const hidden = this._get_view_hidden(aggregates);
 
+    logWithLabel("row_pivots", row_pivots);
+    logWithLabel("col_pivots", col_pivots);
+    logWithLabel("aggregates", aggregates);
+    logWithLabel("hidden", hidden);
+
     const [schema, tschema] = await Promise.all([view.schema(), this._table.schema()]);
     let js, element;
 
@@ -130,9 +164,11 @@ export const draw = mode =>
     try {
       //todo: extract out each different mode to a different .js file.
       if (mode === "x_bar") {
-        await drawXBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden);
+        await drawXBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames);
       } else if (mode === "y_bar") {
         await drawYBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames);
+      } else if (mode === "static_bar") {
+        await drawStaticBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden);
       } else {
         throw "EXCEPTION: chart type not recognised.";
       }
@@ -159,23 +195,24 @@ class D3FCElement extends HTMLElement {
 
   render(mode, configs, callee) {
 
-    console.log("rendering chart innit");
+    console.log("rendering chart.");
     logWithLabel("mode", mode);
     logWithLabel("configs", configs);
     logWithLabel("callee", callee);
 
-    this.remove();
     this.delete();
 
     if (mode === "x_bar") {
       this.renderXBar(mode, configs, callee);
     } else if (mode === "y_bar") {
       this.renderYBar(mode, configs, callee);
+    } else if (mode === "static_bar") {
+      this.renderStaticBar(mode, configs, callee);
     } else {
       throw "EXCEPTION: chart type not recognised.";
     }
 
-    console.log("chart rendered");
+    console.log("chart rendered.");
   }
 
   resize() {
@@ -185,7 +222,7 @@ class D3FCElement extends HTMLElement {
   }
 
   remove() {
-    console.log("removing preexisting chart yo");
+    console.log("removing preexisting chart.");
     this._charts = [];
     for (let e of Array.prototype.slice.call(this._container.children)) {
       if (e.tagName === "svg") {
@@ -195,20 +232,14 @@ class D3FCElement extends HTMLElement {
   }
 
   delete() {
+    //doesn't appear to require that anything be destroyed to prevent memory leaks. Pending further investigation.
     for (let chart of this._charts) {
-      console.log("deleting preexisting chart though");
-      try {
-        chart.destroy();
-      } catch (e) {
-        console.warn("Scatter plot destroy() call failed - this is probably leaking memory");
-      }
+      console.log("deleting preexisting chart.");
     }
     this.remove();
   }
 
-  renderXBar(mode, configs, callee) {
-    //var w = 1000;
-    //var h = 900;
+  renderStaticBar(mode, configs, callee) {
     var w = 600;
     var h = 700;
 
@@ -220,7 +251,6 @@ class D3FCElement extends HTMLElement {
     var padding = 2;
     var dataset = [
       { "organisation": "goog", "price": 410 },
-      //{ "organisation": "msft", "price": 938 },
       { "organisation": "msft", "price": 738 },
       { "organisation": "tsla", "price": 512 }
     ]
@@ -240,11 +270,11 @@ class D3FCElement extends HTMLElement {
       .data(dataset)
       .enter()
       .append("rect")
-        .attr("x", (d, i) => (i * (w / dataset.length)))
-        .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
-        .attr("width", w / dataset.length - padding)
-        .attr("height", (d) => heightMultiplier(d.price))
-        .attr("fill", (d) => `rgb( ${d.price / 10}, ${d.price / 50}, ${d.price / 10})`);
+      .attr("x", (d, i) => (i * (w / dataset.length)))
+      .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
+      .attr("width", w / dataset.length - padding)
+      .attr("height", (d) => heightMultiplier(d.price))
+      .attr("fill", (d) => `rgb( ${d.price / 10}, ${d.price / 50}, ${d.price / 10})`);
 
     //svg
     this._charts[0]
@@ -253,10 +283,71 @@ class D3FCElement extends HTMLElement {
       .enter()
       .append("text")
       .text((d) => d.organisation + " @ " + d.price)
-        .attr("text-anchor", "middle")
-        .attr("x", (d, i) => (i * (w / dataset.length)) + (calculateColWidth() / 2))
-        .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
-        .attr("fill", "white");
+      .attr("text-anchor", "middle")
+      .attr("x", (d, i) => (i * (w / dataset.length)) + (calculateColWidth() / 2))
+      .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
+      .attr("fill", "white");
+
+    logWithLabel("d3", d3);
+    logWithLabel("charts", this._charts);
+  }
+
+  renderXBar(mode, configs, callee) {
+    var w = 600;
+    var h = 700;
+
+    var widthMultFactor = 1;
+    function invertHeight(x) { return h - x } //don't require this because an x graph needn't invert.
+    function widthMultiplier(x) { return x * widthMultFactor }
+    function calculateRowHeight() { return h / dataset.length - padding }
+
+    var padding = 2;
+
+    let yAxisMeasures = "organisation";
+    let xAxisMeasures = configs[0].series[0].stack;
+
+    let dataset = configs[0].series[0].data
+      .map((yAx, i) => ({
+        price: yAx,
+        organisation: configs[0].xAxis.categories[i],
+        i: i
+      })
+      );
+
+    let spaceForText = 40;
+    widthMultFactor = (w - spaceForText) / Math.max.apply(null, dataset.map(x => x.price));
+
+    // Actual d3 stuff yo
+
+    //var svg = d3.select(this._container)
+    this._charts[0] = d3.select(this._container)
+      .append("svg")
+      .attr("width", w)
+      .attr("height", h);
+
+    //svg
+    this._charts[0]
+      .selectAll("rect")
+      .data(dataset)
+      .enter()
+      .append("rect")
+      //.attr("x", (d) => (widthMultiplier(d.price))) //don't require this as we're starting fromt he left anyway.
+      .attr("y", (d, i) => (i * (h / dataset.length)))
+      .attr("width", (d) => widthMultiplier(d.price))
+      .attr("height", h / dataset.length - padding)
+      .attr("fill", (d) => `rgb( ${d.price / 10}, ${d.price / 50}, ${d.price / 10})`);
+
+    //svg
+    this._charts[0]
+      .selectAll("text")
+      .data(dataset)
+      .enter()
+      .append("text")
+      .text( (d) => d.organisation)
+      .attr("text-anchor", "middle")
+      .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight()/2) )
+      .attr("x", (d) => (widthMultiplier(d.price)) + (spaceForText/2) )
+      .attr("fill", "white");
 
     logWithLabel("d3", d3);
     logWithLabel("charts", this._charts);
@@ -272,28 +363,22 @@ class D3FCElement extends HTMLElement {
     function calculateColWidth() { return w / dataset.length - padding }
 
     let padding = 2;
-    // let dataset = [
-    //   { "organisation": "goog", "price": 410 },
-    //   { "organisation": "msft", "price": 938 },
-    //   { "organisation": "tsla", "price": 512 }
-    // ]
 
-    // let yAxisMeasures = configs[0].series[0].stack;
-    // let xAxisMeasures = "organisation";
+    let yAxisMeasures = configs[0].series[0].stack;
+    let xAxisMeasures = "organisation";
 
     let dataset = configs[0].series[0].data
-      .map((p, i) => ({
-          // yAxisMeasures: p,
-          // xAxisMeasures: configs[0].xAxis.categories[i]
-          price: p,
-          organisation: configs[0].xAxis.categories[i],
-          i: i
+      .map((yAx, i) => ({
+        yAxis: yAx,
+        xAxis: configs[0].xAxis.categories[i],
+        i: i
       })
-    );
+      );
 
     logWithLabel("dataset", dataset);
 
-    heightMultFactor = (h - 20) / Math.max.apply(null, dataset.map(x => x.price));
+    let spaceForText = 20;
+    heightMultFactor = (h - spaceForText) / Math.max.apply(null, dataset.map(x => x.yAxis));
 
     // Actual d3 stuff yo
 
@@ -307,22 +392,22 @@ class D3FCElement extends HTMLElement {
       .data(dataset)
       .enter()
       .append("rect")
-        .attr("x", (d, i) => (i * (w / dataset.length)))
-        .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
-        .attr("width", w / dataset.length - padding)
-        .attr("height", (d) => heightMultiplier(d.price))
-        .attr("fill", (d) => `rgb( ${d.price / 10}, ${d.price / 50}, ${d.price / 10})`);
+      .attr("x", (d, i) => (i * (w / dataset.length)))
+      .attr("y", (d) => (invertHeight(heightMultiplier(d.yAxis))))
+      .attr("width", w / dataset.length - padding)
+      .attr("height", (d) => heightMultiplier(d.yAxis))
+      .attr("fill", (d) => `rgb( ${d.yAxis / 10}, ${d.yAxis / 50}, ${d.yAxis / 10})`);
 
     this._charts[0]
       .selectAll("text")
       .data(dataset)
       .enter()
       .append("text")
-      .text((d) => d.organisation + " @ " + d.price)
-        .attr("text-anchor", "middle")
-        .attr("x", (d, i) => (i * (w / dataset.length)) + (calculateColWidth() / 2))
-        .attr("y", (d) => (invertHeight(heightMultiplier(d.price))))
-        .attr("fill", "white");
+      .text((d) => d.xAxis + " @ " + d.yAxis)
+      .attr("text-anchor", "middle")
+      .attr("x", (d, i) => (i * (w / dataset.length)) + (calculateColWidth() / 2))
+      .attr("y", (d) => (invertHeight(heightMultiplier(d.yAxis))))
+      .attr("fill", "white");
 
     logWithLabel("d3", d3);
     logWithLabel("charts", this._charts);
