@@ -53,7 +53,7 @@ function get_or_create_element(div) {
   return perspective_d3fc_element;
 }
 
-async function drawStaticBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden) {
+async function drawStaticBar(perspecViewerEl, view, configs, mode, aggregates) {
   //NB: this is a placeholder. It just draws a constant thing atm.
   const cols = await view.to_columns();
   logSomeStuff(mode, perspecViewerEl, view, cols);
@@ -62,39 +62,7 @@ async function drawStaticBar(perspecViewerEl, view, configs, mode, row_pivots, c
   return config;
 }
 
-async function drawXBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
-  const cols = await view.to_columns();
-  logSomeStuff(mode, perspecViewerEl, view, cols);
-
-  const config = (configs[0] = default_config.call(perspecViewerEl, aggregates, mode));
-
-  let [series, top] = make_y_data(cols, row_pivots, hidden);
-  config.series = series;
-  //config.colors = series.length <= 10 ? COLORS_10 : COLORS_20; //todo: ignore for now.
-  config.legend.enabled = col_pivots.length > 0 || series.length > 1; //todo: ignore for now.
-  config.legend.floating = series.length <= 20; //todo: ignore for now.
-  config.plotOptions.series.dataLabels = { //todo: ignore for now.
-    allowOverlap: false,
-    padding: 10
-  };
-  set_category_axis(config, "xAxis", typesAndNames.xtree_type, top);
-  Object.assign(config, {
-    yAxis: {
-      startOnTick: false,
-      endOnTick: false,
-      title: {
-        text: aggregates.map(x => x.column).join(",  "),
-        style: { color: "#666666", fontSize: "14px" }
-      },
-      labels: { overflow: "justify" }
-    }
-  });
-
-  logWithLabel("config", config);
-  return config;
-}
-
-async function drawYBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
+async function drawBar(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
   const cols = await view.to_columns();
   logSomeStuff(mode, perspecViewerEl, view, cols);
 
@@ -163,12 +131,10 @@ export const draw = mode =>
 
     try {
       //todo: extract out each different mode to a different .js file.
-      if (mode === "x_bar") {
-        await drawXBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames);
-      } else if (mode === "y_bar") {
-        await drawYBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames);
+      if (mode === "x_bar" || mode === "y_bar") {
+        await drawBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames);
       } else if (mode === "static_bar") {
-        await drawStaticBar(this, view, configs, mode, row_pivots, col_pivots, aggregates, hidden);
+        await drawStaticBar(this, view, configs, mode, aggregates);
       } else {
         throw "EXCEPTION: chart type not recognised.";
       }
@@ -307,15 +273,15 @@ class D3FCElement extends HTMLElement {
     let xAxisMeasures = configs[0].series[0].stack;
 
     let dataset = configs[0].series[0].data
-      .map((yAx, i) => ({
-        price: yAx,
-        organisation: configs[0].xAxis.categories[i],
+      .map((xAx, i) => ({
+        xAxis: xAx,
+        yAxis: configs[0].xAxis.categories[i],
         i: i
       })
       );
 
     let spaceForText = 40;
-    widthMultFactor = (w - spaceForText) / Math.max.apply(null, dataset.map(x => x.price));
+    widthMultFactor = (w - spaceForText) / Math.max.apply(null, dataset.map(x => x.xAxis));
 
     // Actual d3 stuff yo
 
@@ -333,9 +299,9 @@ class D3FCElement extends HTMLElement {
       .append("rect")
       //.attr("x", (d) => (widthMultiplier(d.price))) //don't require this as we're starting fromt he left anyway.
       .attr("y", (d, i) => (i * (h / dataset.length)))
-      .attr("width", (d) => widthMultiplier(d.price))
+      .attr("width", (d) => widthMultiplier(d.xAxis))
       .attr("height", h / dataset.length - padding)
-      .attr("fill", (d) => `rgb( ${d.price / 10}, ${d.price / 50}, ${d.price / 10})`);
+      .attr("fill", (d) => `rgb( ${d.xAxis / 10}, ${d.xAxis / 50}, ${d.xAxis / 10})`);
 
     //svg
     this._charts[0]
@@ -343,10 +309,10 @@ class D3FCElement extends HTMLElement {
       .data(dataset)
       .enter()
       .append("text")
-      .text( (d) => d.organisation)
+      .text((d) => d.yAxis + " @ " + d.xAxis)
       .attr("text-anchor", "middle")
       .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight()/2) )
-      .attr("x", (d) => (widthMultiplier(d.price)) + (spaceForText/2) )
+      .attr("x", (d) => (widthMultiplier(d.xAxis)) + (spaceForText/2) )
       .attr("fill", "white");
 
     logWithLabel("d3", d3);
