@@ -57,16 +57,3 @@ global.registerPlugin("d3_y_bar", {
   delete: delete_chart,
   max_size: MAXIMUM_RENDER_SIZE["column"]
 });
-
-global.registerPlugin("d3_static_bar", {
-  name: "[d3fc] STATIC Bar Chart",
-  create: draw("static_bar"),
-  resize: resize,
-  initial: {
-      type: "number",
-      count: 1
-  },
-  selectMode: "select",
-  delete: delete_chart,
-  max_size: MAXIMUM_RENDER_SIZE["column"]
-});
