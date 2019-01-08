@@ -10,12 +10,6 @@
 import * as fc from "d3fc";
 import * as d3 from "d3";
 
-//temporary method to log a label alongside a value for easier troubleshooting.
-function logWithLabel(label, toLog) {
-  console.log(label + ":");
-  console.log(toLog);
-}
-
 export default class D3FCChart {
   constructor(mode, config, container) {
     this._mode = mode;
@@ -91,9 +85,6 @@ function renderXBar(config, container) {
     .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight() / 2))
     .attr("x", (d) => (widthMultiplier(d.xAxis)) + (spaceForText / 2))
     .attr("fill", "white");
-
-  logWithLabel("d3", d3);
-  logWithLabel("svg", svg);
 }
 
 function renderYBar(config, container) {
@@ -101,42 +92,29 @@ function renderYBar(config, container) {
   let width = 600;
   let height = 700;
 
-  let innerWidth = width - 100;
-  let innerHeight = height - 100;
-
-  var containerInner = d3.select(container)
-    .append('svg')
-    .attr('width', width)
-    .attr('height', height);
-
   let dataset = [
     { "organisation": "GOOG", "price": 410 },
     { "organisation": "MSFT", "price": 938 },
     { "organisation": "TSLA", "price": 512 }
   ];
 
-  // create the scales
-  let xScale = d3.scalePoint()
-    .domain(dataset.map(x => x.organisation))
-    .range([0, innerWidth])
-    .padding(0.5);
+  var chart = fc.chartSvgCartesian(
+    d3.scaleBand(),
+    d3.scaleLinear())
+    .xDomain(dataset.map(x => x.organisation))
+    .xPadding(0.2)
+    .yDomain([0, Math.max(...dataset.map(x => x.price))]);
 
-  let yScale = d3.scaleLinear()
-    .domain([0, Math.max(...dataset.map(x => x.price))])
-    .range([innerHeight, 0]);
+  var series = fc.autoBandwidth(fc.seriesSvgBar())
+    .align("left")
+    .crossValue(function (d) { return d.organisation; })
+    .mainValue(function (d) { return d.price; });
 
-  // create a series
-  var series = fc.seriesSvgBar()
-    .bandwidth(40)
-    .crossValue(function(d) { return d.organisation; })
-    .mainValue(function(d) { return d.price; })
-    .xScale(xScale)
-    .yScale(yScale);
+  chart.plotArea(series);
 
-  // render
-  containerInner
+  d3.select(container)
     .datum(dataset)
-    .call(series);
+    .call(chart);
 
-  console.log("dataset", dataset);
+  console.log("completed rendering y bar");
 }
