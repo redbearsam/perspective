@@ -10,6 +10,43 @@
 @sans-serif-fonts: Arial, sans-serif;
 
 :host {
+
+  //stuff copied from the firefox jsfiddle stuff. Probs delete.
+  body {
+    font-family: sans-serif;
+  }
+
+  .chart {
+    width: 100%;
+    height: 500px;
+  }
+
+  .label rect {
+    fill: none;
+  }
+
+  .point path {
+    opacity: 0.5;
+  }
+
+  .y-label {
+    transform: rotate(-90deg);
+  }
+
+  .point text,
+  g.label text {
+    font-size: 10px;
+    stroke: none;
+    fill: black;
+  }
+
+  .plot-area {
+    overflow: visible !important;
+  }
+
+
+
+
     /*background-color: var(--plugin--background, white);
 
     #container {

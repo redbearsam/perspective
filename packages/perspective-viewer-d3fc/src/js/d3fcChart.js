@@ -16,7 +16,7 @@ function logWithLabel(label, toLog) {
   console.log(toLog);
 }
 
-export default class D3FCChart { 
+export default class D3FCChart {
   constructor(mode, config, container) {
     this._mode = mode;
     this._config = config;
@@ -32,7 +32,7 @@ export default class D3FCChart {
       throw "EXCEPTION: chart type not recognised.";
     }
   }
-  
+
   update() {
     this.render();
   }
@@ -88,8 +88,8 @@ function renderXBar(config, container) {
     .append("text")
     .text((d) => d.yAxis + " @ " + d.xAxis)
     .attr("text-anchor", "middle")
-    .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight()/2) )
-    .attr("x", (d) => (widthMultiplier(d.xAxis)) + (spaceForText/2) )
+    .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight() / 2))
+    .attr("x", (d) => (widthMultiplier(d.xAxis)) + (spaceForText / 2))
     .attr("fill", "white");
 
   logWithLabel("d3", d3);
@@ -97,61 +97,46 @@ function renderXBar(config, container) {
 }
 
 function renderYBar(config, container) {
-  let w = 600;
-  let h = 700;
+  console.log("rendering y bar");
+  let width = 600;
+  let height = 700;
 
-  let heightMultFactor = 1;
-  function invertHeight(x) { return h - x }
-  function heightMultiplier(x) { return x * heightMultFactor }
-  function calculateColWidth() { return w / dataset.length - padding }
+  let innerWidth = width - 100;
+  let innerHeight = height - 100;
 
-  let padding = 2;
+  var containerInner = d3.select(container)
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
 
-  let yAxisMeasures = config.series[0].stack;
-  let xAxisMeasures = "organisation";
+  let dataset = [
+    { "organisation": "GOOG", "price": 410 },
+    { "organisation": "MSFT", "price": 938 },
+    { "organisation": "TSLA", "price": 512 }
+  ];
 
-  let dataset = config.series[0].data
-    .map((yAx, i) => ({
-      yAxis: yAx,
-      xAxis: config.xAxis.categories[i],
-      i: i
-    })
-    );
+  // create the scales
+  let xScale = d3.scalePoint()
+    .domain(dataset.map(x => x.organisation))
+    .range([0, innerWidth])
+    .padding(0.5);
 
-  logWithLabel("dataset", dataset);
+  let yScale = d3.scaleLinear()
+    .domain([0, Math.max(...dataset.map(x => x.price))])
+    .range([innerHeight, 0]);
 
-  let spaceForText = 20;
-  heightMultFactor = (h - spaceForText) / Math.max.apply(null, dataset.map(x => x.yAxis));
+  // create a series
+  var series = fc.seriesSvgBar()
+    .bandwidth(40)
+    .crossValue(function(d) { return d.organisation; })
+    .mainValue(function(d) { return d.price; })
+    .xScale(xScale)
+    .yScale(yScale);
 
-  // Actual d3 stuff yo
+  // render
+  containerInner
+    .datum(dataset)
+    .call(series);
 
-  let svg = d3.select(container)
-    .append("svg")
-    .attr("width", w)
-    .attr("height", h);
-
-  svg
-    .selectAll("rect")
-    .data(dataset)
-    .enter()
-    .append("rect")
-    .attr("x", (d, i) => (i * (w / dataset.length)))
-    .attr("y", (d) => (invertHeight(heightMultiplier(d.yAxis))))
-    .attr("width", w / dataset.length - padding)
-    .attr("height", (d) => heightMultiplier(d.yAxis))
-    .attr("fill", (d) => `rgb( ${d.yAxis / 10}, ${d.yAxis / 50}, ${d.yAxis / 10})`);
-
-  svg
-    .selectAll("text")
-    .data(dataset)
-    .enter()
-    .append("text")
-    .text((d) => d.xAxis + " @ " + d.yAxis)
-    .attr("text-anchor", "middle")
-    .attr("x", (d, i) => (i * (w / dataset.length)) + (calculateColWidth() / 2))
-    .attr("y", (d) => (invertHeight(heightMultiplier(d.yAxis))))
-    .attr("fill", "white");
-
-  logWithLabel("d3", d3);
-  logWithLabel("svg", svg);
+  console.log("dataset", dataset);
 }
