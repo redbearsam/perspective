@@ -18,10 +18,26 @@ export default class D3FCChart {
   }
 
   render() {
+    let dataset = this._config.series[0].data
+      .map((mainValue, i) => ({
+        mainValue: mainValue,
+        crossValue: this._config.xAxis.categories[i],
+        i: i
+      })
+    );
+
+    console.log("dataset:", dataset);
+
+    // let dataset = [
+    //   { "organisation": "GOOG", "price": 410 },
+    //   { "organisation": "MSFT", "price": 938 },
+    //   { "organisation": "TSLA", "price": 512 }
+    // ];
+
     if (this._mode === "x_bar") {
-      renderXBar(this._config, this._container);
+      renderXBar(this._config, this._container, dataset);
     } else if (this._mode === "y_bar") {
-      renderYBar(this._config, this._container);
+      renderYBar(this._config, this._container, dataset);
     } else {
       throw "EXCEPTION: chart type not recognised.";
     }
@@ -32,7 +48,7 @@ export default class D3FCChart {
   }
 }
 
-function renderXBar(config, container) {
+function renderXBar(config, container, dataset) {
   let w = 600;
   let h = 700;
 
@@ -43,19 +59,11 @@ function renderXBar(config, container) {
 
   let padding = 2;
 
-  let yAxisMeasures = "organisation";
-  let xAxisMeasures = config.series[0].stack;
-
-  let dataset = config.series[0].data
-    .map((xAx, i) => ({
-      xAxis: xAx,
-      yAxis: config.xAxis.categories[i],
-      i: i
-    })
-    );
+  let crossValueMeasures = "organisation";
+  let mainValueMeasures = config.series[0].stack;
 
   let spaceForText = 40;
-  widthMultFactor = (w - spaceForText) / Math.max.apply(null, dataset.map(x => x.xAxis));
+  widthMultFactor = (w - spaceForText) / Math.max.apply(null, dataset.map(x => x.mainValue));
 
   // Actual d3 stuff yo
 
@@ -71,46 +79,44 @@ function renderXBar(config, container) {
     .append("rect")
     //.attr("x", (d) => (widthMultiplier(d.price))) //don't require this as we're starting fromt he left anyway.
     .attr("y", (d, i) => (i * (h / dataset.length)))
-    .attr("width", (d) => widthMultiplier(d.xAxis))
+    .attr("width", (d) => widthMultiplier(d.mainValue))
     .attr("height", h / dataset.length - padding)
-    .attr("fill", (d) => `rgb( ${d.xAxis / 10}, ${d.xAxis / 50}, ${d.xAxis / 10})`);
+    .attr("fill", (d) => `rgb( ${d.mainValue / 10}, ${d.mainValue / 50}, ${d.mainValue / 10})`);
 
   svg
     .selectAll("text")
     .data(dataset)
     .enter()
     .append("text")
-    .text((d) => d.yAxis + " @ " + d.xAxis)
+    .text((d) => d.crossValue + " @ " + d.mainValue)
     .attr("text-anchor", "middle")
     .attr("y", (d, i) => (i * (h / dataset.length)) + (calculateRowHeight() / 2))
-    .attr("x", (d) => (widthMultiplier(d.xAxis)) + (spaceForText / 2))
+    .attr("x", (d) => (widthMultiplier(d.mainValue)) + (spaceForText / 2))
     .attr("fill", "white");
 }
 
-function renderYBar(config, container) {
-  console.log("rendering y bar");
-  let width = 600;
-  let height = 700;
+function renderYBar(config, container, dataset) {
+  console.log("starting rendering y bar");
 
-  let dataset = [
-    { "organisation": "GOOG", "price": 410 },
-    { "organisation": "MSFT", "price": 938 },
-    { "organisation": "TSLA", "price": 512 }
-  ];
-
-  var chart = fc.chartSvgCartesian(
-    d3.scaleBand(),
-    d3.scaleLinear())
-    .xDomain(dataset.map(x => x.organisation))
+  let chart = fc.chartSvgCartesian(
+    d3.scaleBand(), //x axis scales to fit bars equally 
+    d3.scaleLinear()) //y axis scales linearly across values
+    .xDomain(dataset.map(x => x.crossValue)) //all values from organisations list
     .xPadding(0.2)
-    .yDomain([0, Math.max(...dataset.map(x => x.price))]);
+    .yDomain([0, Math.max(...dataset.map(x => x.mainValue))]) //from 0 to the maximum value of price
+    .yOrient('left') //move the axis to the left;
 
-  var series = fc.autoBandwidth(fc.seriesSvgBar())
+  let series = fc.autoBandwidth(fc.seriesSvgBar())
     .align("left")
-    .crossValue(function (d) { return d.organisation; })
-    .mainValue(function (d) { return d.price; });
+    .crossValue(function (d) { return d.crossValue; })
+    .mainValue(function (d) { return d.mainValue; });
 
-  chart.plotArea(series);
+  let gridlines = fc.annotationSvgGridline(); //Add gridlines
+
+  let multi = fc.seriesSvgMulti()
+    .series([series, gridlines]);
+
+  chart.plotArea(multi);
 
   d3.select(container)
     .datum(dataset)

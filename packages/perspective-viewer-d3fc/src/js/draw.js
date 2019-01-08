@@ -24,22 +24,6 @@ import D3FCChart from "./d3fcChart";
 
 export const PRIVATE = Symbol("D3FC private");
 
-//temporary method to log a label alongside a value for easier troubleshooting.
-function logWithLabel(label, toLog) {
-  console.log(label + ":");
-  console.log(toLog);
-}
-
-//temporary method to log some useful data for testing.
-function logSomeStuff(mode, perspecViewerEl, view, cols) {
-  console.log(`mode is ${mode}`);
-  logWithLabel("perspectiveViewerElement", perspecViewerEl);
-  logWithLabel("view", view);  //show the data structure as it is ingested?
-  logWithLabel("cols", cols); //cols is the default column values
-  logWithLabel("aggregates", view._config.aggregate);
-  logWithLabel("row_pivot", view._config.row_pivot);
-}
-
 function get_or_create_element(div) {
   let perspective_d3fc_element;
   this[PRIVATE] = this[PRIVATE] || {};
@@ -58,8 +42,6 @@ function get_or_create_element(div) {
 
 async function updateConfig(perspecViewerEl, view, configs, mode, row_pivots, col_pivots, aggregates, hidden, typesAndNames) {
   const cols = await view.to_columns();
-  logSomeStuff(mode, perspecViewerEl, view, cols);
-
   const config = (configs[0] = default_config.call(perspecViewerEl, aggregates, mode));
 
   let [series, top] = make_y_data(cols, row_pivots, hidden);
@@ -83,8 +65,6 @@ async function updateConfig(perspecViewerEl, view, configs, mode, row_pivots, co
       labels: { overflow: "justify" }
     }
   });
-
-  logWithLabel("config", config);
 }
 
 export const draw = mode =>
@@ -94,11 +74,6 @@ export const draw = mode =>
     const col_pivots = this._get_view_column_pivots();
     const aggregates = this._get_view_aggregates();
     const hidden = this._get_view_hidden(aggregates);
-
-    logWithLabel("row_pivots", row_pivots);
-    logWithLabel("col_pivots", col_pivots);
-    logWithLabel("aggregates", aggregates);
-    logWithLabel("hidden", hidden);
 
     const [schema, tschema] = await Promise.all([view.schema(), this._table.schema()]);
     let js, element;
@@ -151,12 +126,6 @@ class D3FCElement extends HTMLElement {
   }
 
   render(mode, configs, callee) {
-
-    console.log("rendering chart.");
-    logWithLabel("mode", mode);
-    logWithLabel("configs", configs);
-    logWithLabel("callee", callee);
-
     this.delete();
 
     configs.forEach(config => {
@@ -167,9 +136,6 @@ class D3FCElement extends HTMLElement {
     })
 
     this._charts.forEach(chart => chart.render())
-
-    console.log("chart rendered.");
-    logWithLabel("charts", this._charts);
   }
 
   resize() {
@@ -179,7 +145,6 @@ class D3FCElement extends HTMLElement {
   }
 
   remove() {
-    console.log("removing preexisting chart.");
     this._charts = [];
     for (let e of Array.prototype.slice.call(this._container.children)) {
       if (e.tagName === "DIV") {
@@ -191,7 +156,6 @@ class D3FCElement extends HTMLElement {
   delete() {
     //doesn't appear to require that anything be destroyed to prevent memory leaks. Pending further investigation.
     for (let chart of this._charts) {
-      console.log("deleting preexisting chart.");
     }
     this.remove();
   }
