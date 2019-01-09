@@ -102,7 +102,7 @@ function renderYBar(config, container, dataset) {
     d3.scaleBand(), //x axis scales to fit bars equally 
     d3.scaleLinear()) //y axis scales linearly across values
     .xDomain(dataset.map(x => x.crossValue)) //all values from organisations list
-    .xPadding(0.2)
+    .xPadding(0.5)
     .yDomain([0, Math.max(...dataset.map(x => x.mainValue))]) //from 0 to the maximum value of price
     .yOrient('left') //move the axis to the left;
 
@@ -111,16 +111,42 @@ function renderYBar(config, container, dataset) {
     .crossValue(function (d) { return d.crossValue; })
     .mainValue(function (d) { return d.mainValue; });
 
-  let gridlines = fc.annotationSvgGridline(); //Add gridlines
+  let gridlines = fc.annotationSvgGridline() //Add gridlines
+    .yDecorate(x => x
+      .style("opacity", "0.3")
+      .style("stroke-width", "1.0"))
+    .xDecorate(x => x.style("display", "none"));
 
   let multi = fc.seriesSvgMulti()
-    .series([series, gridlines]);
+    .series([gridlines, series]);
 
   chart.plotArea(multi);
+
+  styleDark(chart);
 
   d3.select(container)
     .datum(dataset)
     .call(chart);
 
   console.log("completed rendering y bar");
+}
+
+function styleDark(chart) {
+
+  chart.xDecorate(selection => {
+    selection.select(".domain") // select the axis' line //this one doesn't work
+      .style("stroke", "red")
+    selection.select("text")
+      .attr("fill", "white")
+    selection.select("path") //select the tick marks
+      .attr("stroke", "white")
+});
+
+  chart.yDecorate(selection => {
+    selection.select("path") //select the tick marks
+      .attr("stroke", "#2f3136")
+    selection.select("text") //y axis text
+      .attr("fill", "white")
+  });
+
 }
