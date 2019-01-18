@@ -61,7 +61,7 @@ function renderBar(config, container, horizontal, hiddenElements, update) {
   let orientation = horizontal ? "horizontal" : "vertical";
 
   let labels = interpretLabels(config);
-  let isSplitBy = labels.splitLabel != null;
+  let isSplitBy = labels.splitLabel != "";
 
   let [dataset, stackedBarData, color] = interpretDataset(isSplitBy, config, hiddenElements);
 
@@ -72,14 +72,9 @@ function renderBar(config, container, horizontal, hiddenElements, update) {
 
   // groups of svgs we need to render
   let multi = configureMultiSvg(isSplitBy, gridlines, barSeries, dataset, color);
+  let chart = configureChart(xScale, yScale, multi);
 
-  let chart = fc.chartSvgCartesian(xScale, yScale)
-    .yOrient('left')
-    .plotArea(multi);
-
-    horizontal ? chart.xLabel(labels.mainLabel) : chart.yLabel(labels.mainLabel);
-
-  styleDark(chart);
+  styleDark(chart, horizontal, labels);
 
   d3.select(container)
     .datum(dataset)
@@ -107,8 +102,6 @@ function configureBarSeries(isSplitBy, orientation, dataset) {
       .crossValue(d => d.crossValue)
       .mainValue(d => d.mainValue);
   }
-
-  console.log("barSeries:", barSeries);
 
   return barSeries;
 }
@@ -161,7 +154,6 @@ function configureScale(isSplitBy, horizontal, dataset, stackedBarData) {
         .padding(0.5);
   }
 
-   
   let [xScale, yScale] = horizontal ? [mainScale, crossScale] : [crossScale, mainScale];
   return [xScale, yScale];
 }
@@ -212,12 +204,24 @@ function configureLegend(isSplitBy, color, hiddenElements, update) {
     .orient('vertical')
     .scale(color)
     .on('cellclick', function (d) {
-      const index = hiddenElements.findIndex(e => e === d);
-      index >= 0 ? hiddenElements.splice(index, 1) : hiddenElements.push(d);
+      toggleElements(d);
       update();
     });
 
+  function toggleElements(elementKey) {
+    const index = hiddenElements.findIndex(e => e === elementKey);
+    index >= 0 ? hiddenElements.splice(index, 1) : hiddenElements.push(elementKey);
+  }
+
   return legend;
+}
+
+function configureChart(xScale, yScale, multi) {
+  let chart = fc.chartSvgCartesian(xScale, yScale)
+    .yOrient('left')
+    .plotArea(multi);
+  
+  return chart;
 }
 
 
@@ -243,9 +247,18 @@ function interpretLabels(config) {
     splitLabel: null
   };
 
-  labels.mainLabel = config.series.map(s => s.stack).join(",");
-  labels.crossLabel = config.row_pivots[0];
-  labels.splitLabel = config.col_pivots[0];
+  labels.mainLabel = config.series
+    .map(s => s.stack)
+    .filter((value, index, self) => self.indexOf(value) === index)
+    .join(", ");
+  
+  labels.crossLabel = config.row_pivots
+    .filter((value, index, self) => self.indexOf(value) === index)
+    .join(", ");
+  
+  labels.splitLabel = config.col_pivots
+    .filter((value, index, self) => self.indexOf(value) === index)
+    .join(", ");
 
   console.log("labels:", labels);
 
@@ -294,29 +307,62 @@ function interpretStackDataset(config, hiddenElements) {
 
 
 // STYLE CHART
-function styleDark(chart) {
-  //todo: invert these depending on horizontal variable which should be passed in.
+function styleDark(chart, horizontal, labels) {
+  let [crossDecorate, mainDecorate, crossLabel, mainLabel] = horizontal 
+    ? [chart.yDecorate, chart.xDecorate, chart.yLabel, chart.xLabel] 
+    : [chart.xDecorate, chart.yDecorate, chart.xLabel, chart.yLabel];
 
-  chart.xDecorate(selection => {
+  function translate(perpendicularToAxis, parallelToAxis) {
+    return horizontal
+      ? `translate(${parallelToAxis}, ${perpendicularToAxis})`
+      : `translate(${perpendicularToAxis}, ${parallelToAxis})`;
+  }
+
+  mainLabel(labels.mainLabel);
+  //crossLabel(labels.crossLabel); // not enabled.
+
+  let textDistanceFromXAxis = 9;
+  let textDistanceFromYAxis = -18; //TODO: need to make this reactive to text length.
+  let distanceFromAxis = horizontal ? textDistanceFromYAxis : textDistanceFromXAxis;
+
+  crossDecorate(selection => {
     let groups = selection._groups[0];
     let parent = selection._parents[0];
-    let totalWidth = parent.clientWidth;
-    let tickSpacing = totalWidth / (groups.length);
+    let totalSpace = horizontal ? parent.clientHeight : parent.clientWidth;
+    let tickSpacing = totalSpace / (groups.length);
 
-    selection.attr("transform", "translate(0, 0)")
+    selection.attr("transform", "translate(0, 0)");
+    parent.firstChild.setAttribute("stroke", "white"); // turn the axis white // TODO: this is too fragile
     selection.select("text")
       .attr("fill", "white")
-      .attr("transform", (x, i) => `translate(${(i * tickSpacing) + (tickSpacing / 2)}, 9)`)
-    selection.select("path") //select the tick marks
+      .attr("transform", (x, i) => translate((i * tickSpacing) + (tickSpacing / 2), distanceFromAxis));
+    selection.select("path") // select the tick marks
       .attr("stroke", "white")
-      .attr("transform", (x, i) => `translate(${i * tickSpacing}, 0)`)
+      .attr("transform", (x, i) => translate(i * tickSpacing, 0));
+
+    if (labels.crossLabel === "") {
+      selection.select("text")
+        .attr("display", "none");
+    }
   });
 
-  chart.yDecorate(selection => {
-    selection.select("path") //select the tick marks
-      .attr("stroke", "#2f3136")
-    selection.select("text") //y axis text
-      .attr("fill", "white")
+  mainDecorate(selection => {
+    let parent = selection._parents[0];
+
+    parent.firstChild.setAttribute("display", "none"); // hide the axis // TODO: this is too fragile.
+    selection.select("path") // select the tick marks
+      .attr("display", "none");
+    selection.select("text")
+      .attr("fill", "white");
   });
 
+  styleDarkAxisSpecific(chart);
+  return;
+}
+
+//styling that always applies specifically to the x or y axis, rather than being dependent on which axis represents cross/main data.
+function styleDarkAxisSpecific(chart) {
+  //chart.xDecorate(selection => {});
+  //chart.yDecorate(selection => {});
+  return;
 }
