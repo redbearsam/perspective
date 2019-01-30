@@ -11,8 +11,6 @@ import * as d3 from "d3";
 import {configureLegend, configureBarSeries, configureGrid, configureScale, configureMultiSvg, configureChart, configureMultiColumnBarSeries, configureScaleMultiColumn, configureMultiSeries} from "./chartConfig";
 import {interpretLabels, interpretGroupBys, interpretDataset, interpretKeysAndColor, interpretMultiColumnDataset, interpretIsMultiColumn} from "./dataInterpretation";
 
-const nbsp = "\xa0";
-
 export default class D3FCChart {
     constructor(mode, config, container) {
         this._mode = mode;
