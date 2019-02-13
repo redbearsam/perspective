@@ -22,10 +22,34 @@ export function mutateCrossAxisText(axis, tickSpacing, distanceFromAxis, transla
         .text(content => returnOnlyMostSubdividedGroup(content));
 }
 
+export function addCrossAxisLabelsForNestedGroupBys(crossAxisMap, groups, horizontal) {
+    let groupByLabelsToAppend = crossAxisMap.calculateLabelPositions(groups, horizontal);
+    groupByLabelsToAppend.forEach(labelTick => labelTick.tick.appendChild(labelTick.label));
+}
+
 function returnOnlyMostSubdividedGroup(content) {
-    if (!Array.isArray(content)) {
+    let contentArray = content.toString().split(",");
+    if (contentArray.length <= 1) {
         return content;
     }
-    let lastElement = content[content.length - 1];
+    let lastElement = contentArray[contentArray.length - 1];
     return lastElement;
+}
+
+export function tickLength(standardTickLength, tickIndex, crossAxisMap) {
+    const multiplier = standardTickLength;
+
+    // ticks are shorter in the case where we're not dubdividing by groups.
+    if (crossAxisMap.length <= 1) {
+        return multiplier / 3;
+    }
+
+    let depth = 1;
+    crossAxisMap.map.forEach(level => {
+        if (level.nodeWithTick(tickIndex).ticks[0] === tickIndex) {
+            depth++;
+        }
+    });
+
+    return depth * multiplier;
 }

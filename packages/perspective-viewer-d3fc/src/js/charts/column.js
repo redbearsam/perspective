@@ -43,7 +43,7 @@ function columnChart(container, settings) {
 
     //chart.xPadding && chart.xPadding(0.5); //todo: why was this here specifically?
 
-    applyStyleToDOM(chart);
+    applyStyleToDOM(chart, settings.crossValues.map(x => x.name), settings.data);
 
     // render
     container.datum(data).call(chart);

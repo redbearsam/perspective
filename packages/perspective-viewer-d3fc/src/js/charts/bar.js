@@ -43,7 +43,7 @@ function barChart(container, settings) {
 
     //chart.yPadding && chart.yPadding(0.5);
 
-    applyStyleToDOM(chart);
+    applyStyleToDOM(chart, settings.crossValues.map(x => x.name), settings.data);
 
     // render
     container.datum(data).call(chart);
