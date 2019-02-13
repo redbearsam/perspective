@@ -14,6 +14,7 @@ import {seriesColours} from "../series/seriesColours";
 import {groupAndStackData} from "../data/groupAndStackData";
 import {legend, filterData} from "../legend/legend";
 import {withGridLines} from "../gridlines/gridlines";
+import {applyStyleToDOM} from "../domStyling/bar";
 
 function barChart(container, settings) {
     const data = groupAndStackData(settings, filterData(settings));
@@ -41,6 +42,8 @@ function barChart(container, settings) {
         .plotArea(withGridLines(series).orient("horizontal"));
 
     chart.yPadding && chart.yPadding(0.5);
+
+    applyStyleToDOM(chart);
 
     // render
     container.datum(data).call(chart);

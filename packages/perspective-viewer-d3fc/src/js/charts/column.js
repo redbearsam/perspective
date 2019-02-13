@@ -14,6 +14,7 @@ import {seriesColours} from "../series/seriesColours";
 import {groupAndStackData} from "../data/groupAndStackData";
 import {legend, filterData} from "../legend/legend";
 import {withGridLines} from "../gridlines/gridlines";
+import {applyStyleToDOM} from "../domStyling/column";
 
 function columnChart(container, settings) {
     const data = groupAndStackData(settings, filterData(settings));
@@ -41,6 +42,8 @@ function columnChart(container, settings) {
         .plotArea(withGridLines(series).orient("vertical"));
 
     chart.xPadding && chart.xPadding(0.5);
+
+    applyStyleToDOM(chart);
 
     // render
     container.datum(data).call(chart);
