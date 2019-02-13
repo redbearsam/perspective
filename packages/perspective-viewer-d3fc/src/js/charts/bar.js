@@ -41,7 +41,7 @@ function barChart(container, settings) {
         .yLabel(crossAxis.label(settings))
         .plotArea(withGridLines(series).orient("horizontal"));
 
-    chart.yPadding && chart.yPadding(0.5);
+    //chart.yPadding && chart.yPadding(0.5);
 
     applyStyleToDOM(chart);
 

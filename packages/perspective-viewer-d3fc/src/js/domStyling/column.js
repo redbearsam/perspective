@@ -7,10 +7,40 @@
  *
  */
 
-import * as fc from "d3fc";
 import {decorateMainAxis} from "./decorateMainAxis";
+import {calculateTickSpacing, mutateCrossAxisText} from "./decorateCrossAxis";
+
+const TICK_LENGTH = 9;
+const LABEL_TICK_PADDING = 2;
 
 export function applyStyleToDOM(chart) {
-    const mainDecorate = chart.yDecorate;
+    const [mainDecorate, crossDecorate] = [chart.yDecorate, chart.xDecorate];
     decorateMainAxis(mainDecorate);
+    decorateCrossAxis(crossDecorate);
+}
+
+function decorateCrossAxis(crossDecorate) {
+    function translate(x, y) {
+        return `translate(${x}, ${y})`;
+    }
+
+    crossDecorate(axis => {
+        let groups = axis._groups[0];
+        let parent = axis._parents[0];
+
+        axis.attr("transform", "translate(0, 0)"); //correctly align ticks on the crossAxis for subsequent mutations
+
+        const tickSpacing = calculateTickSpacing(parent, groups, "width");
+        const textDistanceFromAxis = TICK_LENGTH + LABEL_TICK_PADDING;
+        mutateCrossAxisText(axis, tickSpacing, textDistanceFromAxis, translate);
+
+        mutateCrossAxisTicks(axis, tickSpacing, translate, TICK_LENGTH);
+    });
+}
+
+function mutateCrossAxisTicks(axis, tickSpacing, translate, standardTickLength) {
+    axis.select("path") // select the tick marks
+        .attr("stroke", "rgb(187, 187, 187)")
+        .attr("d", `M0,0L0,${standardTickLength}`)
+        .attr("transform", (x, i) => translate(i * tickSpacing, 0));
 }

@@ -19,16 +19,19 @@ const AXIS_TYPES = {
 };
 
 export const scale = settings => {
+    let _scale;
     switch (axisType(settings)) {
         case AXIS_TYPES.none:
-            return withoutTicks(defaultScaleBand());
+            _scale = withoutTicks(defaultScaleBand());
         case AXIS_TYPES.time:
-            return d3.scaleTime();
+            _scale = d3.scaleTime();
         case AXIS_TYPES.linear:
-            return d3.scaleLinear();
+            _scale = d3.scaleLinear();
         default:
-            return defaultScaleBand();
+            _scale = defaultScaleBand();
     }
+
+    return _scale.paddingInner(0.4).paddingOuter(0.2);
 };
 
 const defaultScaleBand = () => minBandwidth(d3.scaleBand());

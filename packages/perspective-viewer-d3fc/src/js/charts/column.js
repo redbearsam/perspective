@@ -41,7 +41,7 @@ function columnChart(container, settings) {
         .yLabel(mainAxis.label(settings))
         .plotArea(withGridLines(series).orient("vertical"));
 
-    chart.xPadding && chart.xPadding(0.5);
+    //chart.xPadding && chart.xPadding(0.5); //todo: why was this here specifically?
 
     applyStyleToDOM(chart);
 
