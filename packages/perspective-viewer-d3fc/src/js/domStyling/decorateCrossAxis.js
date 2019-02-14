@@ -24,7 +24,19 @@ export function mutateCrossAxisText(axis, tickSpacing, distanceFromAxis, transla
 
 export function addCrossAxisLabelsForNestedGroupBys(crossAxisMap, groups, horizontal) {
     let groupByLabelsToAppend = crossAxisMap.calculateLabelPositions(groups, horizontal);
-    groupByLabelsToAppend.forEach(labelTick => labelTick.tick.appendChild(labelTick.label));
+    groupByLabelsToAppend.forEach(labelTick => {
+        removePreExistingNestedLabel(labelTick);
+        labelTick.tick.appendChild(labelTick.label);
+    });
+}
+
+function removePreExistingNestedLabel(labelTick) {
+    for (let i = 0; i < labelTick.tick.children.length; i++) {
+        if (labelTick.tick.children[i].innerHTML === labelTick.label.innerHTML) {
+            let preExistingNode = labelTick.tick.children[i];
+            labelTick.tick.removeChild(preExistingNode);
+        }
+    }
 }
 
 function returnOnlyMostSubdividedGroup(content) {
@@ -36,16 +48,16 @@ function returnOnlyMostSubdividedGroup(content) {
     return lastElement;
 }
 
-export function tickLength(standardTickLength, tickIndex, crossAxisMap) {
+export function tickLength(standardTickLength, tickIndex, groupByLayerTopography) {
     const multiplier = standardTickLength;
 
     // ticks are shorter in the case where we're not dubdividing by groups.
-    if (crossAxisMap.length <= 1) {
+    if (groupByLayerTopography.length <= 1) {
         return multiplier / 3;
     }
 
     let depth = 1;
-    crossAxisMap.map.forEach(level => {
+    groupByLayerTopography.map.forEach(level => {
         if (level.nodeWithTick(tickIndex).ticks[0] === tickIndex) {
             depth++;
         }

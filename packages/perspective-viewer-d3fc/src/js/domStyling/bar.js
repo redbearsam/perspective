@@ -9,20 +9,20 @@
 
 import {decorateMainAxis} from "./decorateMainAxis";
 import {calculateTickSpacing, mutateCrossAxisText, addCrossAxisLabelsForNestedGroupBys, tickLength} from "./decorateCrossAxis";
-import {CrossAxisMap} from "./crossAxisMap";
+import {GroupByLayerTopography} from "./groupByLayerTopography";
 
 const TICK_LENGTH = 18;
 const LABEL_TICK_PADDING = -2;
 
 export function applyStyleToDOM(chart, crossLabels, data) {
-    let crossAxisMap = new CrossAxisMap(crossLabels, data);
+    let groupByLayerTopography = new GroupByLayerTopography(crossLabels, data);
 
     const [mainDecorate, crossDecorate] = [chart.xDecorate, chart.yDecorate];
     decorateMainAxis(mainDecorate);
-    decorateCrossAxis(crossDecorate, crossAxisMap, TICK_LENGTH, LABEL_TICK_PADDING);
+    decorateCrossAxis(crossDecorate, groupByLayerTopography, TICK_LENGTH, LABEL_TICK_PADDING);
 }
 
-function decorateCrossAxis(crossDecorate, crossAxisMap, tickLength, labelTickPadding) {
+function decorateCrossAxis(crossDecorate, groupByLayerTopography, tickLength, labelTickPadding) {
     function translate(y, x) {
         return `translate(${x}, ${y})`;
     }
@@ -37,15 +37,15 @@ function decorateCrossAxis(crossDecorate, crossAxisMap, tickLength, labelTickPad
         const textDistanceFromAxis = -tickLength - labelTickPadding;
         mutateCrossAxisText(axis, tickSpacing, textDistanceFromAxis, translate);
 
-        mutateCrossAxisTicks(axis, tickSpacing, translate, tickLength, crossAxisMap);
+        mutateCrossAxisTicks(axis, tickSpacing, translate, tickLength, groupByLayerTopography);
 
-        addCrossAxisLabelsForNestedGroupBys(crossAxisMap, groups, true);
+        addCrossAxisLabelsForNestedGroupBys(groupByLayerTopography, groups, true);
     });
 }
 
-function mutateCrossAxisTicks(axis, tickSpacing, translate, standardTickLength, crossAxisMap) {
+function mutateCrossAxisTicks(axis, tickSpacing, translate, standardTickLength, groupByLayerTopography) {
     axis.select("path") // select the tick marks
         .attr("stroke", "rgb(187, 187, 187)")
-        .attr("d", (d, i) => `M0,0L-${tickLength(standardTickLength, i, crossAxisMap)},0`)
+        .attr("d", (d, i) => `M0,0L-${tickLength(standardTickLength, i, groupByLayerTopography)},0`)
         .attr("transform", (x, i) => translate(i * tickSpacing, 0));
 }

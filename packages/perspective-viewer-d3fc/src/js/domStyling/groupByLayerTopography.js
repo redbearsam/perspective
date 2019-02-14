@@ -8,12 +8,12 @@
  */
 
 import {isNullOrUndefined} from "util";
-let LABEL_TICK_PADDING = 2;
-let STANDARD_TICK_LENGTH = 9;
+const LABEL_TICK_PADDING = 2;
+const STANDARD_TICK_LENGTH = 9;
 const HORIZONTAL_STANDARD_TICK_LENGTH = -18;
 const HORIZONTAL_LABEL_TICK_PADDING = -2;
 
-export class CrossAxisMap {
+export class GroupByLayerTopography {
     constructor(crossLabels, dataset) {
         this._map = this.generateMap(crossLabels, dataset);
     }
