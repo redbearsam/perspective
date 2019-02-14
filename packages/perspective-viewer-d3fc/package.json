@@ -17,6 +17,7 @@
         "watch": "webpack --color --watch --config src/config/d3fc.plugin.config.js",
         "test:run": "jest --silent --color 2>&1",
         "test": "npm-run-all test:build test:run",
+        "test:unit": "jest --config jest-config.js",
         "clean": "find build -mindepth 1 -delete",
         "clean:screenshots": "find screenshots/ \\( -name *.diff.png -o -name *.failed.png \\) -mindepth 1 -delete"
     },
@@ -47,5 +48,15 @@
         "d3-svg-legend": "^2.25.6",
         "d3fc": "^14.0.25",
         "gradient-parser": "0.1.5"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.2.2",
+        "@babel/node": "^7.2.2",
+        "@babel/preset-env": "^7.3.1",
+        "babel-jest": "^24.1.0",
+        "babel-plugin-transform-custom-element-classes": "^0.1.0",
+        "babel-polyfill": "^6.26.0",
+        "d3": "^5.8.2",
+        "jest": "^24.1.0"
     }
 }
