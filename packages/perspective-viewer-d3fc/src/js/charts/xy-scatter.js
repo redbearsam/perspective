@@ -13,6 +13,7 @@ import {pointData} from "../data/pointData";
 import {seriesColoursFromGroups} from "../series/seriesColours";
 import {seriesLinearRange, seriesColourRange} from "../series/seriesRange";
 import {symbolLegend} from "../legend/legend";
+import {colourRangeLegend} from "../legend/colourRangeLegend";
 import {filterDataByGroup} from "../legend/filter";
 import {withGridLines} from "../gridlines/gridlines";
 
@@ -35,6 +36,7 @@ function xyScatter(container, settings) {
             .colour(useGroupColours ? colour : null);
     } else {
         colour = seriesColourRange(settings, data, "colorValue");
+        legend = colourRangeLegend().scale(colour);
     }
 
     const size = settings.mainValues.length > 3 ? seriesLinearRange(settings, data, "size").range([10, 10000]) : null;
