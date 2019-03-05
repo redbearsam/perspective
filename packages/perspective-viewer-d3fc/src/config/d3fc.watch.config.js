@@ -9,7 +9,6 @@ rules.push({
 
 module.exports = Object.assign({}, pluginConfig, {
     entry: "./src/js/plugin/plugin.js",
-    mode: "development",
     module: Object.assign({}, pluginConfig.module, {
         rules
     })
