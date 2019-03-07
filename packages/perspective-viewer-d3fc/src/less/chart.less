@@ -26,8 +26,17 @@
         & .x-label {
             height: 1.2em !important;
         }
+
         & d3fc-canvas.plot-area {
             display: none;
+        }
+        &.d3_xy_scatter_canvas {
+            & d3fc-canvas.plot-area {
+                display: block;
+            }
+            & d3fc-svg.plot-area {
+                display: none;
+            }
         }
 
         & .y-axis text,
@@ -90,7 +99,7 @@
                     fill: rgba(31, 119, 180, 0.5);
                     stroke: rgb(31, 119, 180);
                 }
-                &.hidden  path {
+                &.hidden path {
                     fill: rgba(204, 204, 204, 0.5);
                     stroke: rgb(204, 204, 204);
                 }
