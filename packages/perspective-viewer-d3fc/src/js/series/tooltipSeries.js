@@ -8,13 +8,16 @@
  */
 import * as fc from "d3fc";
 import {withoutOpacity, withOpacity} from "./seriesColours.js";
-import {remoteTooltip} from "../tooltip/tooltip";
+import {remoteTooltip, removeRemoteTooltip} from "../tooltip/tooltip";
+
+let currentNode = null;
 
 export function tooltipPointSeries(settings, colour, size = 200) {
     let series = fc.seriesSvgPoint();
 
     series = series.decorate((selection, data) => {
-        remoteTooltip()(selection, data[0], settings);
+        currentNode = data.length > 0 ? remoteTooltip()(selection, data[0], settings) : removeRemoteTooltip(currentNode);
+
         if (colour) {
             selection.style("stroke", d => withoutOpacity(colour(d.key))).style("fill", d => withOpacity(colour(d.key)));
         }
