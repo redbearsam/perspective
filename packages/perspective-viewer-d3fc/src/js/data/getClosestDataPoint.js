@@ -17,25 +17,39 @@ export function getClosestDataPoint(data, xScale, yScale, xPos, yPos) {
 
     const inRange = 0 < xPos && xPos < xScale.range()[1] && 0 < yPos && yPos < yScale.range()[0];
     const xDomain = xScale.domain();
+    let mainValues = [];
 
     if (inRange) {
-        const closestCrossValue = xDomain.reduce(
-            (previousClosest, currentValue) => {
-                const distanceFromX = Math.abs(xPos - xScale(currentValue));
-                return previousClosest[1] == null || previousClosest[1] > distanceFromX ? [currentValue, distanceFromX] : previousClosest;
-            },
-            ["none", null]
-        )[0];
+        if (xScale && xScale.nice) {
+            const invertedValue = xScale.invert(xPos);
 
-        const mainValues = data.filter(e => e.length > 0 && e[0].crossValue === closestCrossValue);
+            mainValues = data.reduce(
+                (previousClosest, currentValue) => {
+                    const distanceFromX = currentValue ? Math.abs(invertedValue - currentValue[0].crossValue) : null;
+                    return previousClosest[1] == null || previousClosest[1] > distanceFromX ? [currentValue, distanceFromX] : previousClosest;
+                },
+                ["none", null]
+            );
+        } else {
+            const closestCrossValue = xDomain.reduce(
+                (previousClosest, currentValue) => {
+                    const distanceFromX = Math.abs(xPos - xScale(currentValue));
+                    return previousClosest[1] == null || previousClosest[1] > distanceFromX ? [currentValue, distanceFromX] : previousClosest;
+                },
+                ["none", null]
+            )[0];
+            mainValues = data.filter(e => e.length > 0 && e[0].crossValue === closestCrossValue);
+        }
 
-        match = mainValues[0].reduce(
-            (previousClosest, currentValue) => {
-                const distanceFromY = Math.abs(yPos - yScale(currentValue.mainValue));
-                return previousClosest[1] == null || previousClosest[1] > distanceFromY ? [currentValue, distanceFromY] : previousClosest;
-            },
-            [{}, null]
-        );
+        if (mainValues.length > 0) {
+            match = mainValues[0].reduce(
+                (previousClosest, currentValue) => {
+                    const distanceFromY = Math.abs(yPos - yScale(currentValue.mainValue));
+                    return previousClosest[1] == null || previousClosest[1] > distanceFromY ? [currentValue, distanceFromY] : previousClosest;
+                },
+                [{}, null]
+            );
+        }
     }
 
     return match;
