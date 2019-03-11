@@ -44,15 +44,15 @@ export const remoteTooltip = () => {
     const _tooltip = (selection, data, settings) => {
         const node = selection.node();
 
-        if (!node || !node.isConnected || !data) return;
+        if (!node || !node.isConnected || !data) return null;
 
         const container = select(getChartElement(node).getContainer());
         const tooltipDiv = getTooltipDiv(container);
 
         generateHtmlDefault(tooltipDiv, data, settings);
-        showTooltip(container.node(), node, tooltipDiv);
+        const tooltip = showTooltip(container.node(), node, tooltipDiv);
         select(node).style("opacity", "0.7");
-        return node;
+        return tooltip;
     };
 
     _tooltip.generateHtml = (...args) => {
@@ -66,11 +66,9 @@ export const remoteTooltip = () => {
     return _tooltip;
 };
 
-export const removeRemoteTooltip = node => {
-    if (!node || !node.isConnected) return;
+export const removeRemoteTooltip = tooltipDiv => {
+    if (!tooltipDiv) return null;
 
-    const container = select(getChartElement(node).getContainer());
-    const tooltipDiv = getTooltipDiv(container);
     hideTooltip(tooltipDiv);
 
     return null;
@@ -102,6 +100,8 @@ function showTooltip(containerNode, barNode, tooltipDiv) {
         .style("opacity", 0.9);
 
     shiftIfOverflowingChartArea(tooltipDiv, containerRect, left, top);
+
+    return tooltipDiv;
 }
 
 function shiftIfOverflowingChartArea(tooltipDiv, containerRect, left, top) {
