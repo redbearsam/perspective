@@ -8,8 +8,7 @@
  */
 import * as fc from "d3fc";
 import * as mainAxis from "../axis/mainAxis";
-import {symbolTypeFromGroups} from "../series/pointSeries";
-import {pointSeriesCanvas} from "../series/pointSeriesCanvas";
+import {pointSeriesCanvas, symbolTypeFromGroups} from "../series/pointSeriesCanvas";
 import {pointData} from "../data/pointData";
 import {seriesColoursFromGroups} from "../series/seriesColours";
 import {seriesLinearRange, seriesColourRange} from "../series/seriesRange";
