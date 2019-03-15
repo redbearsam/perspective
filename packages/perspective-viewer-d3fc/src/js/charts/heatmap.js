@@ -31,8 +31,11 @@ function heatmapChart(container, settings) {
     const yDomain = crossAxis
         .domain(settings)
         .settingName("splitValues")
-        .valueName("mainValue")(data)
-        .reverse();
+        .valueName("mainValue")(data);
+    if (settings.splitValues.find(d => d.type !== "integer" && d.type !== "float")) {
+        yDomain.reverse();
+    }
+
     const yScale = crossAxis.scale(settings, "splitValues");
     const yAxis = crossAxis
         .axisFactory(settings)
