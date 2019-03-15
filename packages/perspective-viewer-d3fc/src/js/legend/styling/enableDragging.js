@@ -7,42 +7,71 @@
  *
  */
 
+import * as d3 from "d3";
+import {isElementOverflowing} from "../../utils/utils";
+
 export function enableDragging(element) {
     const node = element.node();
     node.style.cursor = "move";
 
-    let xPositionDiff = 0,
-        yPositionDiff = 0,
-        xPositionLast = 0,
-        yPositionLast = 0;
+    const drag = d3.drag().on("drag", function() {
+        const [offsetX, offsetY] = enforceContainerBoundaries(this, d3.event.dx, d3.event.dy);
+        const newX = this.offsetLeft + offsetX;
+        const newY = this.offsetTop + offsetY;
 
-    node.onmousedown = dragMouseDown;
+        this.style.left = `${newX}px`;
+        this.style.top = `${newY}px`;
+    });
 
-    function dragMouseDown(e) {
-        e = e || window.event;
-        e.preventDefault();
-        xPositionLast = e.clientX;
-        yPositionLast = e.clientY;
-        document.onmouseup = releaseNode;
-        document.onmousemove = dragNode;
+    element.call(drag);
+}
+
+function enforceContainerBoundaries(legendNode, offsetX, offsetY) {
+    console.log(d3.select(".cartesian-chart"));
+    const chartNodeRect = d3
+        //.select("#container")
+        .select(".cartesian-chart")
+        .node()
+        .getBoundingClientRect();
+
+    const legendNodeRect = legendNode.getBoundingClientRect();
+
+    const margin = 10;
+    const newLegendNodeRect = {
+        top: legendNodeRect.top + offsetY + margin,
+        right: legendNodeRect.right + offsetX + margin,
+        bottom: legendNodeRect.bottom + offsetY + margin,
+        left: legendNodeRect.left + offsetX + margin
+    };
+
+    let adjustedOffsetX = offsetX;
+
+    if (isElementOverflowing(chartNodeRect, newLegendNodeRect, "left")) {
+        const leftAdjust = newLegendNodeRect.left - chartNodeRect.left;
+        adjustedOffsetX = offsetX - leftAdjust;
     }
 
-    function dragNode(e) {
-        e = e || window.event;
-        e.preventDefault();
-        // calculate the new cursor position:
-        xPositionDiff = xPositionLast - e.clientX;
-        yPositionDiff = yPositionLast - e.clientY;
-        xPositionLast = e.clientX;
-        yPositionLast = e.clientY;
-        // set the node's new position:
-        node.style.top = `${node.offsetTop - yPositionDiff}px`;
-        node.style.left = `${node.offsetLeft - xPositionDiff}px`;
+    if (isElementOverflowing(chartNodeRect, newLegendNodeRect, "right")) {
+        const rightAdjust = newLegendNodeRect.right - chartNodeRect.right;
+        adjustedOffsetX = offsetX - rightAdjust;
     }
 
-    function releaseNode() {
-        // stop moving when mouse button is released:
-        document.onmouseup = null;
-        document.onmousemove = null;
+    let adjustedOffsetY = offsetY;
+
+    // if (isElementOverflowing(chartNodeRect, newLegendNodeRect, "top")) {
+    //     const topAdjust = newLegendNodeRect.top - chartNodeRect.top;
+    //     adjustedOffsetY = offsetY - topAdjust;
+    // }
+
+    if (isElementOverflowing(chartNodeRect, newLegendNodeRect, "bottom")) {
+        console.log("chartNodeRect", chartNodeRect, "newLegendNodeRect", newLegendNodeRect);
+        console.log("chartNode.bottom", chartNodeRect.bottom, "newLegendNode.bottom", newLegendNodeRect.bottom);
+        const bottomAdjust = newLegendNodeRect.bottom - chartNodeRect.bottom;
+        console.log("offsetY", offsetY, "bottomAdjust", bottomAdjust);
+        adjustedOffsetY = offsetY - bottomAdjust;
+        console.log("adjustedOffset", adjustedOffsetY);
+        console.log("\n\n");
     }
+
+    return [adjustedOffsetX, adjustedOffsetY];
 }
