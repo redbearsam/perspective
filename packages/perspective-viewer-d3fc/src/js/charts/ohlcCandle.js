@@ -16,10 +16,9 @@ import withGridLines from "../gridlines/gridlines";
 import {hardLimitZeroPadding} from "../d3fc/padding/hardLimitZero";
 import zoomableChart from "../zoom/zoomableChart";
 import nearbyTip from "../tooltip/nearbyTip";
+import {ohlcCandleSeries} from "../series/ohlcCandleSeries";
 import {colorScale, setOpacity} from "../series/seriesColors";
 import {colorLegend} from "../legend/legend";
-
-const isUp = d => d.closeValue >= d.openValue;
 
 function ohlcCandle(seriesCanvas) {
     return function(container, settings) {
@@ -38,54 +37,19 @@ function ohlcCandle(seriesCanvas) {
 
         const upColor = colorScale()
             .domain(keys)
-            .defaultColours(["rgba(31, 119, 180)"])
+            .defaultColors(["rgba(31, 119, 180)"])
             .mapFunction(setOpacity(1))();
-        const downColor = colorScale()
-            .domain(keys)
-            .defaultColours(["rgba(255, 127, 14)"])();
-        const avgColor = colorScale()
-            .domain(keys)
-            .defaultColours(["rgba(31, 119, 180)"])();
 
         const legend = colorLegend()
             .settings(settings)
             .scale(keys.length > 1 ? upColor : null);
 
-        const series = seriesCanvas()
-            .crossValue(d => d.crossValue)
-            .openValue(d => d.openValue)
-            .highValue(d => d.highValue)
-            .lowValue(d => d.lowValue)
-            .closeValue(d => d.closeValue)
-            .decorate((context, d) => {
-                const color = isUp(d) ? upColor(d.key) : downColor(d.key);
-                context.fillStyle = color;
-                context.strokeStyle = color;
-            });
-
-        const bollingerAverageSeries = fc
-            .seriesCanvasLine()
-            .mainValue(d => d.bollinger.average)
-            .crossValue(d => d.crossValue)
-            .decorate((context, d) => {
-                context.strokeStyle = avgColor(d[0].key);
-            });
-
-        const bollingerAreaSeries = fc
-            .seriesCanvasArea()
-            .mainValue(d => d.bollinger.upper)
-            .baseValue(d => d.bollinger.lower)
-            .crossValue(d => d.crossValue)
-            .decorate((context, d) => {
-                context.fillStyle = setOpacity(0.25)(avgColor(d[0].key));
-            });
-
-        const mergedSeries = fc.seriesCanvasMulti().series([bollingerAreaSeries, series, bollingerAverageSeries]);
+        const series = ohlcCandleSeries(settings, seriesCanvas, upColor);
 
         const multi = fc
             .seriesCanvasMulti()
             .mapping((data, index) => data[index])
-            .series(data.map(() => mergedSeries));
+            .series(data.map(() => series));
 
         const paddingStrategy = hardLimitZeroPadding()
             .pad([0.1, 0.1])

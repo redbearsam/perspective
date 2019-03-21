@@ -31,12 +31,12 @@ export function seriesColorsFromGroups(settings) {
 
 export function colorScale() {
     let domain = null;
-    let defaultColours = null;
+    let defaultColors = null;
     let mapFunction = withOpacity;
 
     const colors = () => {
-        if (defaultColours || domain.length > 1) {
-            const range = domain.length > 1 ? d3.schemeCategory10.map(mapFunction) : defaultColours;
+        if (defaultColors || domain.length > 1) {
+            const range = domain.length > 1 ? d3.schemeCategory10.map(mapFunction) : defaultColors;
             return d3.scaleOrdinal(range).domain(domain);
         }
         return null;
@@ -50,11 +50,11 @@ export function colorScale() {
         return colors;
     };
 
-    colors.defaultColours = (...args) => {
+    colors.defaultColors = (...args) => {
         if (!args.length) {
-            return defaultColours;
+            return defaultColors;
         }
-        defaultColours = args[0];
+        defaultColors = args[0];
         return colors;
     };
 
