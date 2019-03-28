@@ -25,7 +25,7 @@
 
         &.d3_sunburst {
             padding: 0;
-            overflow: auto;
+            overflow: none;
         }
 
         &.d3_treemap {
@@ -88,7 +88,8 @@
         & .line {
             stroke: var(--d3fc-series, rgb(31, 119, 180));
         }
-        & .point, & .series {
+        & .point,
+        & .series {
             fill: var(--d3fc-series, rgba(31, 119, 180, 0.5));
             stroke: var(--d3fc-series, rgb(31, 119, 180));
         }
