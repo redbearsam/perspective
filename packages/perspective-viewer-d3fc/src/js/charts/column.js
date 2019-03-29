@@ -7,8 +7,9 @@
  *
  */
 import * as fc from "d3fc";
-import * as crossAxis from "../axis/crossAxis";
-import * as mainAxis from "../axis/mainAxis";
+import {axisFactory} from "../axis/axisFactory";
+import {chartSvgFactory} from "../axis/chartFactory";
+import {AXIS_TYPES} from "../axis/axisType";
 import {barSeries} from "../series/barSeries";
 import {seriesColors} from "../series/seriesColors";
 import {groupAndStackData} from "../data/groupData";
@@ -32,30 +33,18 @@ function columnChart(container, settings) {
         .mapping((data, index) => data[index])
         .series(data.map(() => bars));
 
-    const xDomain = crossAxis.domain(settings)(data);
-    const xScale = crossAxis.scale(settings);
-    const xAxis = crossAxis.axisFactory(settings).domain(xDomain)();
+    const xAxis = axisFactory(settings)
+        .settingName("crossValues")
+        .valueName("crossValue")(data);
+    const yAxis = axisFactory(settings)
+        .settingName("mainValues")
+        .valueName("mainValue")
+        .orient("vertical")
+        .include([0])
+        .paddingStrategy(hardLimitZeroPadding())
+        .overrideAxisType(AXIS_TYPES.linear)(data);
 
-    const chart = fc
-        .chartSvgCartesian({
-            xScale,
-            yScale: mainAxis.scale(settings),
-            xAxis
-        })
-        .xDomain(xDomain)
-        .xLabel(crossAxis.label(settings))
-        .xAxisHeight(xAxis.size)
-        .xDecorate(xAxis.decorate)
-        .yDomain(
-            mainAxis
-                .domain(settings)
-                .include([0])
-                .paddingStrategy(hardLimitZeroPadding())(data)
-        )
-        .yLabel(mainAxis.label(settings))
-        .yOrient("left")
-        .yNice()
-        .plotArea(withGridLines(series).orient("vertical"));
+    const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
     if (chart.xPaddingInner) {
         chart.xPaddingInner(0.5);
@@ -66,7 +55,7 @@ function columnChart(container, settings) {
     const zoomChart = zoomableChart()
         .chart(chart)
         .settings(settings)
-        .xScale(xScale);
+        .xScale(xAxis.scale);
 
     // render
     container.datum(data).call(zoomChart);

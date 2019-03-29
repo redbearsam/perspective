@@ -1,0 +1,46 @@
+/******************************************************************************
+ *
+ * Copyright (c) 2017, the Perspective Authors.
+ *
+ * This file is part of the Perspective library, distributed under the terms of
+ * the Apache License 2.0.  The full license can be found in the LICENSE file.
+ *
+ */
+import * as d3 from "d3";
+import {flattenArray} from "./flatten";
+import minBandwidth from "./minBandwidth";
+import withoutTicks from "./withoutTicks";
+
+export const scale = () => withoutTicks(defaultScaleBand());
+
+const defaultScaleBand = () => minBandwidth(d3.scaleBand());
+
+export const domain = () => {
+    let valueNames = ["crossValue"];
+
+    const _domain = data => {
+        const flattenedData = flattenArray(data);
+        return [...new Set(flattenedData.map(d => d[valueNames[0]]))];
+    };
+
+    _domain.valueName = (...args) => {
+        if (!args.length) {
+            return valueNames[0];
+        }
+        valueNames = [args[0]];
+        return _domain;
+    };
+    _domain.valueNames = (...args) => {
+        if (!args.length) {
+            return valueNames;
+        }
+        valueNames = args[0];
+        return _domain;
+    };
+
+    _domain.settingName = () => _domain;
+
+    return _domain;
+};
+
+export const labelFunction = valueName => d => d[valueName].join("|");
