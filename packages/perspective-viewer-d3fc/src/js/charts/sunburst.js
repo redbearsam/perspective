@@ -14,15 +14,31 @@ import {drawArc, arcVisible} from "../series/arcSeries";
 import {labelVisible, labelTransform} from "../axis/sunburstLabel";
 
 function sunburst(container, settings) {
-    const {width: containerWidth, height: containerHeight} = container.node().getBoundingClientRect();
-    const padding = 30;
-    const radius = (Math.min(containerWidth, containerHeight) - padding) / 6;
+    const sunburstData = treeData(settings);
+    const containerRect = container.node().getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
 
-    const sunburstSvg = container.selectAll("svg").data(treeData(settings), d => d.split);
-    sunburstSvg.exit().remove();
+    const minSize = 400;
+    const cols = sunburstData.length === 1 ? 1 : Math.floor(containerWidth / minSize);
+    const rows = Math.ceil(sunburstData.length / cols);
+    container.style("grid-template-columns", `repeat(${cols}, ${containerWidth / cols}px)`);
+    container.style("grid-template-rows", `repeat(${rows}, ${containerHeight / cols}px)`);
 
-    const sunburstEnter = sunburstSvg.enter().append("svg");
-    const sunburstContainer = sunburstEnter.append("g").attr("class", "sunburst");
+    const sunburstDiv = container.selectAll("div").data(treeData(settings), d => d.split);
+    sunburstDiv.exit().remove();
+
+    const sunburstEnter = sunburstDiv
+        .enter()
+        .append("div")
+        .style("overflow", "hidden");
+
+    const sunburstContainer = sunburstEnter
+        .append("svg")
+        .style("overflow", "visible")
+        .append("g")
+        .attr("class", "sunburst");
+
     sunburstContainer
         .append("circle")
         .attr("fill", "none")
@@ -35,13 +51,16 @@ function sunburst(container, settings) {
         .attr("pointer-events", "none");
 
     sunburstEnter
-        .merge(sunburstSvg)
-        .style("width", containerWidth)
-        .style("height", containerHeight)
+        .merge(sunburstDiv)
+        .select("svg")
+        .style("height", "80%")
+        .style("width", "80%")
         .select("g.sunburst")
-        .attr("transform", `translate(${containerWidth / 2}, ${containerHeight / 2})`)
-        .each(function({data, color}) {
+        .attr("transform", `translate(${containerWidth / 2 / cols}, ${containerHeight / 2 / cols})`)
+        .each(function({split, data, color}) {
             const sunburstElement = select(this);
+            const {width, height} = this.parentNode.getBoundingClientRect();
+            const radius = Math.min(width, height) / 6;
             data.each(d => (d.current = d));
 
             const segment = sunburstElement.selectAll("g.segment").data(data.descendants().slice(1));
@@ -80,11 +99,17 @@ function sunburst(container, settings) {
                 .attr("r", radius)
                 .datum(data);
 
-            const onClick = clickHandler(data, sunburstElement, parent, parentTitle, path, label, radius);
-            parent.on("click", onClick);
+            const onClick = clickHandler(data, sunburstElement, parent, parentTitle, path, label, radius, split, settings);
+            if (settings.sunburstLevel) {
+                const currentLevel = data.descendants().find(d => d.data.name === settings.sunburstLevel[split]);
+                currentLevel && onClick(currentLevel, true);
+            } else {
+                settings.sunburstLevel = {};
+            }
+            parent.on("click", d => onClick(d, false));
             path.filter(d => d.children)
                 .style("cursor", "pointer")
-                .on("click", onClick);
+                .on("click", d => onClick(d, false));
         });
 }
 sunburst.plugin = {
