@@ -8,10 +8,10 @@
  */
 import * as fc from "d3fc";
 import {axisType} from "./axisType";
-import * as none from "./none";
-import * as linear from "./linear";
-import * as time from "./time";
-import * as ordinal from "./ordinal";
+import * as none from "./noAxis";
+import * as linear from "./linearAxis";
+import * as time from "./timeAxis";
+import * as ordinal from "./ordinalAxis";
 
 const axisTypes = {
     none,
