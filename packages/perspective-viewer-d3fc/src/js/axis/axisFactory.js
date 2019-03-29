@@ -21,7 +21,7 @@ const axisTypes = {
 };
 
 export const axisFactory = settings => {
-    let overrideAxisType = null;
+    let excludeType = null;
     let orient = "horizontal";
     let settingName = "crossValues";
     let settingValue = null;
@@ -31,11 +31,10 @@ export const axisFactory = settings => {
     const optional = {};
 
     const _factory = data => {
-        const useType =
-            overrideAxisType ||
-            axisType(settings)
-                .settingName(settingName)
-                .settingValue(settingValue)();
+        const useType = axisType(settings)
+            .excludeType(excludeType)
+            .settingName(settingName)
+            .settingValue(settingValue)();
 
         const axis = axisTypes[useType];
         const domainFunction = axis.domain().valueNames(valueNames);
@@ -74,11 +73,11 @@ export const axisFactory = settings => {
         decorate: () => {}
     });
 
-    _factory.overrideAxisType = (...args) => {
+    _factory.excludeType = (...args) => {
         if (!args.length) {
-            return overrideAxisType;
+            return excludeType;
         }
-        overrideAxisType = args[0];
+        excludeType = args[0];
         return _factory;
     };
 

@@ -17,6 +17,7 @@ export const AXIS_TYPES = {
 export const axisType = settings => {
     let settingName = "crossValues";
     let settingValue = null;
+    let excludeType = null;
 
     const getType = () => {
         const checkTypes = types => {
@@ -32,9 +33,13 @@ export const axisType = settings => {
 
         if (settings[settingName].length === 0) {
             return AXIS_TYPES.none;
-        } else if (checkTypes(["datetime"])) {
+        } else if (excludeType != AXIS_TYPES.time && checkTypes(["datetime"])) {
             return AXIS_TYPES.time;
-        } else if (checkTypes(["integer", "float"])) {
+        } else if (excludeType != AXIS_TYPES.linear && checkTypes(["integer", "float"])) {
+            return AXIS_TYPES.linear;
+        }
+
+        if (excludeType == AXIS_TYPES.ordinal) {
             return AXIS_TYPES.linear;
         }
         return AXIS_TYPES.ordinal;
@@ -53,6 +58,14 @@ export const axisType = settings => {
             return settingValue;
         }
         settingValue = args[0];
+        return getType;
+    };
+
+    getType.excludeType = (...args) => {
+        if (!args.length) {
+            return excludeType;
+        }
+        excludeType = args[0];
         return getType;
     };
 

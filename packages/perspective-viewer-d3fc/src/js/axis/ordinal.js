@@ -94,7 +94,7 @@ export const component = settings => {
     const axisGroups = domain => {
         const groups = [];
         domain.forEach(tick => {
-            const split = tick.split ? tick.split("|") : tick;
+            const split = tick.split ? tick.split("|") : [tick];
             split.forEach((s, i) => {
                 while (groups.length <= i) groups.push([]);
 

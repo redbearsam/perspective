@@ -39,10 +39,10 @@ function columnChart(container, settings) {
     const yAxis = axisFactory(settings)
         .settingName("mainValues")
         .valueName("mainValue")
+        .excludeType(AXIS_TYPES.ordinal)
         .orient("vertical")
         .include([0])
-        .paddingStrategy(hardLimitZeroPadding())
-        .overrideAxisType(AXIS_TYPES.linear)(data);
+        .paddingStrategy(hardLimitZeroPadding())(data);
 
     const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
