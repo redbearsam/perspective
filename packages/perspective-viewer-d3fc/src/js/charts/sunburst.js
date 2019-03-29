@@ -12,14 +12,13 @@ import {treeData} from "../data/treeData";
 import {clickHandler} from "../interaction/clickHandler";
 import {drawArc, arcVisible} from "../series/arcSeries";
 import {labelVisible, labelTransform} from "../axis/sunburstLabel";
+import {colorRangeLegend} from "../legend/colorRangeLegend";
 
 function sunburst(container, settings) {
     const sunburstData = treeData(settings);
-    const containerRect = container.node().getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
+    const {width: containerWidth, height: containerHeight} = container.node().getBoundingClientRect();
 
-    const minSize = 400;
+    const minSize = 500;
     const cols = sunburstData.length === 1 ? 1 : Math.floor(containerWidth / minSize);
     const rows = Math.ceil(sunburstData.length / cols);
     container.style("grid-template-columns", `repeat(${cols}, ${containerWidth / cols}px)`);
@@ -28,55 +27,48 @@ function sunburst(container, settings) {
     const sunburstDiv = container.selectAll("div").data(treeData(settings), d => d.split);
     sunburstDiv.exit().remove();
 
-    const sunburstEnter = sunburstDiv
-        .enter()
-        .append("div")
-        .style("overflow", "hidden");
+    const sunburstEnter = sunburstDiv.enter().append("div");
 
     const sunburstContainer = sunburstEnter
         .append("svg")
-        .style("overflow", "visible")
         .append("g")
         .attr("class", "sunburst");
+
+    sunburstContainer.append("text").attr("class", "title");
 
     sunburstContainer
         .append("circle")
         .attr("fill", "none")
         .attr("pointer-events", "all");
 
-    sunburstContainer
-        .append("text")
-        .attr("text-anchor", "middle")
-        .attr("user-select", "none")
-        .attr("pointer-events", "none");
-
+    sunburstContainer.append("text").attr("class", "parent");
     sunburstEnter
         .merge(sunburstDiv)
         .select("svg")
-        .style("height", "80%")
-        .style("width", "80%")
         .select("g.sunburst")
         .attr("transform", `translate(${containerWidth / 2 / cols}, ${containerHeight / 2 / cols})`)
         .each(function({split, data, color}) {
             const sunburstElement = select(this);
-            const {width, height} = this.parentNode.getBoundingClientRect();
-            const radius = Math.min(width, height) / 6;
+            const svgNode = this.parentNode;
+            const {width, height} = svgNode.getBoundingClientRect();
+
+            const title = sunburstElement.select("text.title").text(split);
+            title.attr("transform", `translate(0, ${-(height / 2 - 5)})`);
+
+            const radius = (Math.min(width, height) - 100) / 6;
             data.each(d => (d.current = d));
 
             const segment = sunburstElement.selectAll("g.segment").data(data.descendants().slice(1));
             const segmentEnter = segment
                 .enter()
                 .append("g")
-                .attr("class", "segment")
-                .attr("text-anchor", "middle");
+                .attr("class", "segment");
 
             segmentEnter.append("path");
             segmentEnter
                 .append("text")
-                .attr("dy", "0.35em")
-                .attr("user-select", "none")
-                .attr("pointer-events", "none");
-
+                .attr("class", "segment")
+                .attr("dy", "0.35em");
             const segmentMerge = segmentEnter.merge(segment);
 
             const path = segmentMerge
@@ -93,7 +85,7 @@ function sunburst(container, settings) {
                 .attr("transform", d => labelTransform(d.current, radius))
                 .text(d => d.data.name);
 
-            const parentTitle = sunburstElement.select("text");
+            const parentTitle = sunburstElement.select("text.parent");
             const parent = sunburstElement
                 .select("circle")
                 .attr("r", radius)
@@ -110,6 +102,11 @@ function sunburst(container, settings) {
             path.filter(d => d.children)
                 .style("cursor", "pointer")
                 .on("click", d => onClick(d, false));
+
+            const legend = colorRangeLegend().scale(color);
+            select(svgNode.parentNode)
+                .call(legend)
+                .select("div.legend-container");
         });
 }
 sunburst.plugin = {
