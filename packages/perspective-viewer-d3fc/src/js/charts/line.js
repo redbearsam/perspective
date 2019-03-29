@@ -7,8 +7,8 @@
  *
  */
 import * as fc from "d3fc";
-import * as crossAxis from "../axis/crossAxis";
-import * as mainAxis from "../axis/mainAxis";
+import {axisFactory} from "../axis/axisFactory";
+import {chartSvgFactory} from "../axis/chartFactory";
 import {seriesColors} from "../series/seriesColors";
 import {lineSeries} from "../series/lineSeries";
 import {splitData} from "../data/splitData";
@@ -30,30 +30,17 @@ function lineChart(container, settings) {
 
     const series = fc.seriesSvgRepeat().series(lineSeries(settings, color).orient("vertical"));
 
-    const paddingStrategy = hardLimitZeroPadding()
-        .pad([0.1, 0.1])
-        .padUnit("percent");
+    const xAxis = axisFactory(settings)
+        .settingName("crossValues")
+        .valueName("crossValue")(data);
+    const yAxis = axisFactory(settings)
+        .settingName("mainValues")
+        .valueName("mainValue")
+        .orient("vertical")
+        .include([0])
+        .paddingStrategy(hardLimitZeroPadding())(data);
 
-    const xDomain = crossAxis.domain(settings)(data);
-    const xScale = crossAxis.scale(settings);
-    const xAxis = crossAxis.axisFactory(settings).domain(xDomain)();
-    const yScale = mainAxis.scale(settings);
-
-    const chart = fc
-        .chartSvgCartesian({
-            xScale,
-            yScale,
-            xAxis
-        })
-        .xDomain(xDomain)
-        .xLabel(crossAxis.label(settings))
-        .xAxisHeight(xAxis.size)
-        .xDecorate(xAxis.decorate)
-        .yDomain(mainAxis.domain(settings).paddingStrategy(paddingStrategy)(data))
-        .yLabel(mainAxis.label(settings))
-        .yOrient("left")
-        .yNice()
-        .plotArea(withGridLines(series).orient("vertical"));
+    const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
     chart.xPaddingInner && chart.xPaddingInner(1);
     chart.xPaddingOuter && chart.xPaddingOuter(0.5);
@@ -61,12 +48,12 @@ function lineChart(container, settings) {
     const zoomChart = zoomableChart()
         .chart(chart)
         .settings(settings)
-        .xScale(xScale);
+        .xScale(xAxis.scale);
 
     const toolTip = nearbyTip()
         .settings(settings)
-        .xScale(xScale)
-        .yScale(yScale)
+        .xScale(xAxis.scale)
+        .yScale(yAxis.scale)
         .color(color)
         .data(data);
 
