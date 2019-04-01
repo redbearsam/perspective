@@ -12,7 +12,6 @@ import {treeData} from "../data/treeData";
 import {getOrCreateElement} from "../utils/utils";
 import treemapLayout from "../layout/treemapLayout";
 import template from "../../html/parent-controls.html";
-import {seriesColorRange} from "../series/seriesRange";
 
 function getColors(nodes, colors = []) {
     if (nodes.children && nodes.children.length > 0) {
@@ -25,12 +24,23 @@ function getColors(nodes, colors = []) {
     return colors;
 }
 
-function treeColor(data, maxDepth) {
+function treeColor(data, maxDepth, settings) {
     if (maxDepth > 0) {
         const colors = getColors(data);
         const min = Math.min(...colors);
-        const max = Math.max(...colors);
-        return d3.scaleSequential(d3.interpolateViridis).domain([min, max]);
+        let max = Math.max(...colors);
+
+        let interpolator = settings.colorStyles.interpolator.full;
+
+        if (min >= 0) {
+            interpolator = settings.colorStyles.interpolator.positive;
+        } else if (max <= 0) {
+            interpolator = settings.colorStyles.interpolator.negative;
+        } else {
+            max = Math.max(-min, max);
+        }
+
+        return d3.scaleSequential(interpolator).domain([min, max]);
     }
 
     return () => "rgb(31, 119, 180)";
@@ -38,8 +48,8 @@ function treeColor(data, maxDepth) {
 
 const addTreemap = (selection, data, settings) => {
     const maxDepth = data.height;
-    //const color = treeColor(data, maxDepth);
-    const color = seriesColorRange(settings, data, "color");
+    const color = treeColor(data, maxDepth, settings);
+
     let parent = null;
 
     const isDeepest = d => d.depth === maxDepth;
