@@ -62,7 +62,6 @@ function ohlcCandle(seriesCanvas) {
             .settingName("mainValues")
             .valueNames(["lowValue", "highValue"])
             .orient("vertical")
-            .include([0])
             .paddingStrategy(paddingStrategy)(data);
 
         const chart = chartCanvasFactory(xAxis, yAxis).plotArea(
@@ -73,6 +72,7 @@ function ohlcCandle(seriesCanvas) {
 
         chart.xPaddingInner && chart.xPaddingInner(1);
         chart.xPaddingOuter && chart.xPaddingOuter(0.5);
+        chart.yNice && chart.yNice();
 
         const zoomChart = zoomableChart()
             .chart(chart)

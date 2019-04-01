@@ -51,6 +51,7 @@ function columnChart(container, settings) {
         chart.xPaddingOuter(0.25);
         bars.align("left");
     }
+    chart.yNice && chart.yNice();
 
     const zoomChart = zoomableChart()
         .chart(chart)

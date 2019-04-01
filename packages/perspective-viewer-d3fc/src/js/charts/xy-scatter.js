@@ -66,6 +66,9 @@ function xyScatter(container, settings) {
         .yLabel(settings.mainValues[1].name)
         .plotArea(withGridLines(series).canvas(true));
 
+    chart.xNice && chart.xNice();
+    chart.yNice && chart.yNice();
+
     const zoomChart = zoomableChart()
         .chart(chart)
         .settings(settings)

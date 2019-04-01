@@ -32,8 +32,5 @@ export function seriesColorRange(settings, data, valueName) {
         extent = [-maxVal, maxVal];
     }
 
-    return d3
-        .scaleSequential(interpolator)
-        .domain(extent)
-        .nice();
+    return d3.scaleSequential(interpolator).domain(extent);
 }

@@ -28,8 +28,5 @@ const chartFactory = (xAxis, yAxis, cartesian) => {
         .yDecorate(yAxis.decorate)
         .yOrient("left");
 
-    if (chart.yNice) chart.yNice();
-    if (chart.xNice) chart.xNice();
-
     return chart;
 };

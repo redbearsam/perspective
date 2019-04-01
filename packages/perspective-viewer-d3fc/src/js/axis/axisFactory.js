@@ -42,6 +42,7 @@ export const axisFactory = settings => {
         optionalParams.forEach(p => {
             if (optional[p] && domainFunction[p]) domainFunction[p](optional[p]);
         });
+        if (domainFunction.orient) domainFunction.orient(orient);
 
         const domain = domainFunction(data);
         const component = axis.component ? createComponent(axis, domain, data) : defaultComponent();

@@ -46,6 +46,7 @@ function areaChart(container, settings) {
 
     chart.xPaddingInner && chart.xPaddingInner(1);
     chart.xPaddingOuter && chart.xPaddingOuter(0.5);
+    chart.yNice && chart.yNice();
 
     const zoomChart = zoomableChart()
         .chart(chart)

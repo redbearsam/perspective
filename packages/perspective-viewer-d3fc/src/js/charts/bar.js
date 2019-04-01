@@ -52,6 +52,7 @@ function barChart(container, settings) {
         chart.yPaddingOuter(0.25);
         bars.align("left");
     }
+    chart.xNice && chart.xNice();
 
     const zoomChart = zoomableChart()
         .chart(chart)

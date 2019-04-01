@@ -34,6 +34,10 @@ function yScatter(container, settings) {
         .mapping((data, index) => data[index])
         .series(data.map(series => categoryPointSeries(settings, series.key, color, symbols)));
 
+    const paddingStrategy = hardLimitZeroPadding()
+        .pad([0.05, 0.05])
+        .padUnit("percent");
+
     const xAxis = axisFactory(settings)
         .settingName("crossValues")
         .valueName("crossValue")(data);
@@ -41,13 +45,13 @@ function yScatter(container, settings) {
         .settingName("mainValues")
         .valueName("mainValue")
         .orient("vertical")
-        .include([0])
-        .paddingStrategy(hardLimitZeroPadding())(data);
+        .paddingStrategy(paddingStrategy)(data);
 
     const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
     chart.xPaddingInner && chart.xPaddingInner(1);
     chart.xPaddingOuter && chart.xPaddingOuter(0.5);
+    chart.yNice && chart.yNice();
 
     const zoomChart = zoomableChart()
         .chart(chart)

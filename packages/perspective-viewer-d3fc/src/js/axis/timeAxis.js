@@ -13,7 +13,7 @@ import {flattenArray} from "./flatten";
 export const scale = () => d3.scaleTime();
 
 export const domain = () => {
-    const base = fc.extentTime().padUnit("domain");
+    const base = fc.extentTime();
 
     let valueNames = ["crossValue"];
 
@@ -39,7 +39,7 @@ export const domain = () => {
 
     const getDataExtent = data => {
         const dataWidth = getMinimumGap(data);
-        return base.pad([dataWidth / 2, dataWidth / 2])(data);
+        return base.padUnit("domain").pad([dataWidth / 2, dataWidth / 2])(data);
     };
 
     _domain.valueName = (...args) => {

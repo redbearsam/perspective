@@ -16,11 +16,14 @@ export const scale = () => minBandwidth(d3.scaleBand()).padding(0.5);
 
 export const domain = () => {
     let valueNames = ["crossValue"];
+    let orient = "horizontal";
 
     const _domain = data => {
         const flattenedData = flattenArray(data);
-        return [...new Set(flattenedData.map(d => d[valueNames[0]]))];
+        return transformDomain([...new Set(flattenedData.map(d => d[valueNames[0]]))]);
     };
+
+    const transformDomain = d => (orient == "vertical" ? d.reverse() : d);
 
     _domain.valueName = (...args) => {
         if (!args.length) {
@@ -34,6 +37,14 @@ export const domain = () => {
             return valueNames;
         }
         valueNames = args[0];
+        return _domain;
+    };
+
+    _domain.orient = (...args) => {
+        if (!args.length) {
+            return orient;
+        }
+        orient = args[0];
         return _domain;
     };
 

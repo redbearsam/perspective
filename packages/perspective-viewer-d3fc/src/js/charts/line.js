@@ -30,6 +30,10 @@ function lineChart(container, settings) {
 
     const series = fc.seriesSvgRepeat().series(lineSeries(settings, color).orient("vertical"));
 
+    const paddingStrategy = hardLimitZeroPadding()
+        .pad([0.1, 0.1])
+        .padUnit("percent");
+
     const xAxis = axisFactory(settings)
         .settingName("crossValues")
         .valueName("crossValue")(data);
@@ -38,12 +42,13 @@ function lineChart(container, settings) {
         .valueName("mainValue")
         .orient("vertical")
         .include([0])
-        .paddingStrategy(hardLimitZeroPadding())(data);
+        .paddingStrategy(paddingStrategy)(data);
 
     const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
     chart.xPaddingInner && chart.xPaddingInner(1);
     chart.xPaddingOuter && chart.xPaddingOuter(0.5);
+    chart.yNice && chart.yNice();
 
     const zoomChart = zoomableChart()
         .chart(chart)
