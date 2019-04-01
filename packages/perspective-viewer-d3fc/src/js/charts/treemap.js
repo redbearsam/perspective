@@ -12,6 +12,7 @@ import {treeData} from "../data/treeData";
 import {getOrCreateElement} from "../utils/utils";
 import treemapLayout from "../layout/treemapLayout";
 import template from "../../html/parent-controls.html";
+import {seriesColorRange} from "../series/seriesRange";
 
 function getColors(nodes, colors = []) {
     if (nodes.children && nodes.children.length > 0) {
@@ -37,7 +38,8 @@ function treeColor(data, maxDepth) {
 
 const addTreemap = (selection, data, settings) => {
     const maxDepth = data.height;
-    const color = treeColor(data, maxDepth);
+    //const color = treeColor(data, maxDepth);
+    const color = seriesColorRange(settings, data, "color");
     let parent = null;
 
     const isDeepest = d => d.depth === maxDepth;
