@@ -23,7 +23,10 @@ export function colorRangeLegend() {
     const formatFunc = d => (Number.isInteger(d) ? d3.format(",.0f")(d) : d3.format(",.2f")(d));
 
     function legend(container) {
-        const domain = scale.domain();
+        const domain = scale
+            .copy()
+            .nice()
+            .domain();
         const paddedDomain = fc
             .extentLinear()
             .pad([0.1, 0.1])
@@ -34,6 +37,7 @@ export function colorRangeLegend() {
         const yScale = d3
             .scaleLinear()
             .domain(paddedDomain)
+            .nice()
             .range([height, 0]);
 
         const svgBar = fc
