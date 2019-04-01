@@ -32,6 +32,7 @@ function areaChart(container, settings) {
     const series = fc.seriesSvgRepeat().series(areaSeries(settings, color).orient("vertical"));
 
     const xAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("crossValues")
         .valueName("crossValue")(data);
     const yAxis = axisFactory(settings)

@@ -8,6 +8,7 @@
  */
 import * as fc from "d3fc";
 import {axisFactory} from "../axis/axisFactory";
+import {AXIS_TYPES} from "../axis/axisType";
 import {chartSvgFactory} from "../axis/chartFactory";
 import {seriesColors} from "../series/seriesColors";
 import {lineSeries} from "../series/lineSeries";
@@ -35,6 +36,7 @@ function lineChart(container, settings) {
         .padUnit("percent");
 
     const xAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("crossValues")
         .valueName("crossValue")(data);
     const yAxis = axisFactory(settings)

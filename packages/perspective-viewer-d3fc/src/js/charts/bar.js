@@ -41,6 +41,7 @@ function barChart(container, settings) {
         .include([0])
         .paddingStrategy(hardLimitZeroPadding())(data);
     const yAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("crossValues")
         .valueName("crossValue")
         .orient("vertical")(data);

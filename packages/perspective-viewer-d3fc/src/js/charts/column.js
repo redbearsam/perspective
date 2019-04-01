@@ -34,6 +34,7 @@ function columnChart(container, settings) {
         .series(data.map(() => bars));
 
     const xAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("crossValues")
         .valueName("crossValue")(data);
     const yAxis = axisFactory(settings)

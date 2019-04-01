@@ -7,6 +7,7 @@
  *
  */
 import {axisFactory} from "../axis/axisFactory";
+import {AXIS_TYPES} from "../axis/axisType";
 import {chartSvgFactory} from "../axis/chartFactory";
 import {heatmapSeries} from "../series/heatmapSeries";
 import {seriesColorRange} from "../series/seriesRange";
@@ -25,9 +26,11 @@ function heatmapChart(container, settings) {
     const legend = colorRangeLegend().scale(color);
 
     const xAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("crossValues")
         .valueName("crossValue")(data);
     const yAxis = axisFactory(settings)
+        .excludeType(AXIS_TYPES.linear)
         .settingName("splitValues")
         .valueName("mainValue")
         .orient("vertical")(data);
