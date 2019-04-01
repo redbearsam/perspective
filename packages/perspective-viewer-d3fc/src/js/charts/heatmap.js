@@ -32,7 +32,7 @@ function heatmapChart(container, settings) {
         .valueName("mainValue")
         .orient("vertical")(data);
 
-    const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
+    const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series));
 
     if (chart.xPaddingInner) {
         chart.xPaddingInner(0);
