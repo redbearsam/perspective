@@ -11,9 +11,7 @@ import {flattenArray} from "./flatten";
 import minBandwidth from "./minBandwidth";
 import withoutTicks from "./withoutTicks";
 
-export const scale = () => withoutTicks(defaultScaleBand());
-
-const defaultScaleBand = () => minBandwidth(d3.scaleBand());
+export const scale = () => withoutTicks(minBandwidth(d3.scaleBand()));
 
 export const domain = () => {
     let valueNames = ["crossValue"];

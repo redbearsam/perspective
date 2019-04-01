@@ -12,9 +12,7 @@ import minBandwidth from "./minBandwidth";
 import {flattenArray} from "./flatten";
 import {multiAxisBottom, multiAxisLeft} from "../d3fc/axis/multi-axis";
 
-export const scale = () => defaultScaleBand();
-
-const defaultScaleBand = () => minBandwidth(d3.scaleBand());
+export const scale = () => minBandwidth(d3.scaleBand()).padding(0.5);
 
 export const domain = () => {
     let valueNames = ["crossValue"];
@@ -67,6 +65,7 @@ export const component = settings => {
                     .tickSizeInner(tickSizeInner)
                     .tickSizeOuter(tickSizeOuter);
             }
+
             return axis;
         };
 
