@@ -45,8 +45,6 @@ function areaChart(container, settings) {
 
     const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series).orient("vertical"));
 
-    chart.xPaddingInner && chart.xPaddingInner(1);
-    chart.xPaddingOuter && chart.xPaddingOuter(0.5);
     chart.yNice && chart.yNice();
 
     const zoomChart = zoomableChart()

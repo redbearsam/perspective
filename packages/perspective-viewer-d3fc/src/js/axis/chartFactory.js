@@ -28,5 +28,11 @@ const chartFactory = (xAxis, yAxis, cartesian) => {
         .yDecorate(yAxis.decorate)
         .yOrient("left");
 
+    // Padding defaults can be overridden
+    chart.xPaddingInner && chart.xPaddingInner(1);
+    chart.xPaddingOuter && chart.xPaddingOuter(0.5);
+    chart.yPaddingInner && chart.yPaddingInner(1);
+    chart.yPaddingOuter && chart.yPaddingOuter(0.5);
+
     return chart;
 };
