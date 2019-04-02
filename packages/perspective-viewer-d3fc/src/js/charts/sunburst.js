@@ -24,6 +24,10 @@ function sunburst(container, settings) {
         width: containerWidth / cols,
         height: Math.min(containerHeight, Math.max(containerHeight / rows, containerWidth / cols))
     };
+    if (containerHeight / rows > containerSize.height * 0.75) {
+        containerSize.height = containerHeight / rows;
+    }
+
     container.style("grid-template-columns", `repeat(${cols}, ${containerSize.width}px)`);
     container.style("grid-template-rows", `repeat(${rows}, ${containerSize.height}px)`);
 
