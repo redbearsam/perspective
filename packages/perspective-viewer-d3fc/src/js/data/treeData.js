@@ -44,14 +44,26 @@ export function treeData(settings) {
     const data = Object.entries(sets).map(set => {
         const tree = {name: "root", children: set[1]};
         const root = d3.hierarchy(tree).sum(d => d.size);
-        const color = treeColor(settings, set);
-        return {split: set[0], data: d3.partition().size([2 * Math.PI, root.height + 1])(root), color};
+        const chartData = d3.partition().size([2 * Math.PI, root.height + 1])(root);
+        chartData.each(d => {
+            d.current = d;
+            d.mainValues = settings.mainValues.length === 1 ? d.value : [d.value, d.data.color];
+            d.crossValue = d
+                .ancestors()
+                .slice(0, -1)
+                .reverse()
+                .map(cross => cross.data.name)
+                .join("|");
+            d.key = set[0];
+        });
+
+        return {split: set[0], data: chartData};
     });
 
     return data;
 }
 
-const getDataValue = (d, aggregate, split) => (split.length ? d[`${split}|${aggregate.name}`] : d[aggregate.name]);
+export const getDataValue = (d, aggregate, split) => (split.length ? d[`${split}|${aggregate.name}`] : d[aggregate.name]);
 
 function getSplitNames(d) {
     const splits = [];
@@ -67,13 +79,4 @@ function getSplitNames(d) {
         }
     });
     return splits;
-}
-
-function treeColor(settings, [split, data]) {
-    if (settings.mainValues.length > 1) {
-        const min = Math.min(...settings.data.map(d => getDataValue(d, settings.mainValues[1], split)));
-        const max = Math.max(...data.map(d => d.color));
-        return d3.scaleSequential(d3.interpolateViridis).domain([min, max]);
-    }
-    return () => "rgb(31, 119, 180)";
 }
