@@ -12,7 +12,10 @@ import {treeData} from "../data/treeData";
 import {getOrCreateElement} from "../utils/utils";
 import treemapLayout from "../layout/treemapLayout";
 import template from "../../html/parent-controls.html";
+import {colorRangeLegend} from "../legend/colorRangeLegend";
+import {seriesColorRange} from "../series/seriesRange";
 
+// only get the colors from the bottom level (e.g. nodes with no children)
 function getColors(nodes, colors = []) {
     if (nodes.children && nodes.children.length > 0) {
         nodes.children.forEach(child => {
@@ -24,32 +27,17 @@ function getColors(nodes, colors = []) {
     return colors;
 }
 
-function treeColor(data, maxDepth, settings) {
-    if (maxDepth > 0) {
+function treeColor(data, settings) {
+    if (data.height > 0) {
         const colors = getColors(data);
-        const min = Math.min(...colors);
+        let min = Math.min(...colors);
         let max = Math.max(...colors);
-
-        let interpolator = settings.colorStyles.interpolator.full;
-
-        if (min >= 0) {
-            interpolator = settings.colorStyles.interpolator.positive;
-        } else if (max <= 0) {
-            interpolator = settings.colorStyles.interpolator.negative;
-        } else {
-            max = Math.max(-min, max);
-        }
-
-        return d3.scaleSequential(interpolator).domain([min, max]);
+        return seriesColorRange(settings, null, null, [min, max]);
     }
-
-    return () => "rgb(31, 119, 180)";
 }
 
-const addTreemap = (selection, data, settings) => {
+const addTreemap = (selection, data, settings, color) => {
     const maxDepth = data.height;
-    const color = treeColor(data, maxDepth, settings);
-
     let parent = null;
 
     const isDeepest = d => d.depth === maxDepth;
@@ -102,7 +90,7 @@ const addTreemap = (selection, data, settings) => {
         treemapLayout(containerWidth, containerHeight)(newData);
         newData.parent = d.parent;
 
-        addTreemap(selection, newData, settings);
+        addTreemap(selection, newData, settings, color);
 
         getGoToParentControls(selection)
             .style("display", parent ? "" : "none")
@@ -127,7 +115,12 @@ function treemap(container, settings) {
         .attr("height", "100%")
         .append("g");
 
-    addTreemap(container, data, settings);
+    const color = treeColor(data, settings);
+
+    addTreemap(container, data, settings, color);
+
+    const legend = colorRangeLegend().scale(color);
+    container.call(legend);
 }
 
 const getGoToParentControls = container =>
