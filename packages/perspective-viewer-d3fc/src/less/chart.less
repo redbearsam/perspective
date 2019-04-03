@@ -62,40 +62,6 @@
             }
         }
 
-        &.d3_sunburst {
-            display: inline-grid;
-            padding: 0;
-            overflow-y: auto;
-
-            & div {
-                overflow: hidden;
-            }
-
-            & svg {
-                width: 100%;
-                height: 100%;
-            }
-
-            & text.title,
-            & text.segment,
-            & text.parent {
-                text-anchor: middle;
-                user-select: none;
-                pointer-events: none;
-
-                &.title {
-                    dominant-baseline: hanging;
-                }
-            }
-
-            .legend-container {
-                display: inline-flex;
-                top: unset;
-                right: unset;
-                transform: translate(-100px, 5px);
-            }
-        }
-
         &.d3_treemap {
             padding-right: 125px;
             rect {
@@ -110,7 +76,7 @@
                 font-weight:normal;
             }
         }
-        
+
 
         & .x-label {
             height: 1.2em !important;
@@ -313,7 +279,7 @@
             }
         }
     }
-
+    
     div.tooltip {
         position: absolute;
         text-align: left;
