@@ -24,6 +24,8 @@ export default series => {
     let canvas = false;
     let xScale = null;
     let yScale = null;
+    let shiftX = false;
+    let shiftY = false;
     let context = null;
 
     let seriesMulti = fc.seriesSvgMulti();
@@ -44,7 +46,23 @@ export default series => {
         const xStyle = orient === "vertical" ? crossGrid : mainGrid;
         const yStyle = orient === "horizontal" ? crossGrid : mainGrid;
 
-        const gridlines = annotationGridline.xDecorate(xStyle).yDecorate(yStyle);
+        const gridlines = annotationGridline
+            .xDecorate(d => {
+                xStyle(d);
+                if (shiftX) {
+                    const lines = d.nodes();
+                    const boxSize = Math.abs(lines[lines.length - 1].getBBox().x - lines[0].getBBox().x) / (lines.length - 1);
+                    d.attr("transform", `translate(${boxSize / 2})`);
+                }
+            })
+            .yDecorate(d => {
+                yStyle(d);
+                if (shiftY) {
+                    const lines = d.nodes();
+                    const boxSize = Math.abs(lines[lines.length - 1].getBBox().y - lines[0].getBBox().y) / (lines.length - 1);
+                    d.attr("transform", `translate(0, ${-boxSize / 2})`);
+                }
+            });
 
         return multi.series([gridlines, series])(...args);
     };
@@ -78,6 +96,22 @@ export default series => {
             return yScale;
         }
         yScale = args[0];
+        return _withGridLines;
+    };
+
+    _withGridLines.shiftX = (...args) => {
+        if (!args.length) {
+            return shiftX;
+        }
+        shiftX = args[0];
+        return _withGridLines;
+    };
+
+    _withGridLines.shiftY = (...args) => {
+        if (!args.length) {
+            return shiftY;
+        }
+        shiftY = args[0];
         return _withGridLines;
     };
 

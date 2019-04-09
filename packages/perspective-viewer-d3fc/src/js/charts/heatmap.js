@@ -35,7 +35,14 @@ function heatmapChart(container, settings) {
         .valueName("mainValue")
         .orient("vertical")(data);
 
-    const chart = chartSvgFactory(xAxis, yAxis).plotArea(withGridLines(series));
+    const plotArea = withGridLines(series);
+    if (xAxis.type === AXIS_TYPES.time) {
+        plotArea.shiftX(true);
+    }
+    if (yAxis.type === AXIS_TYPES.time) {
+        plotArea.shiftY(true);
+    }
+    const chart = chartSvgFactory(xAxis, yAxis).plotArea(plotArea);
 
     if (chart.xPaddingInner) {
         chart.xPaddingInner(0);
