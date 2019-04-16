@@ -22,19 +22,20 @@ export const clickHandler = (data, g, parent, parentTitle, path, label, radius, 
         parent.style("cursor", "default");
         parentTitle.html("");
     }
-    data.each(
-        d =>
-            (d.target = {
-                x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
-                x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
-                y0: Math.max(0, d.y0 - p.depth),
-                y1: Math.max(0, d.y1 - p.depth)
-            })
-    );
+    data.each(d => {
+        console.log(d);
+        d.target = {
+            x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+            x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+            y0: Math.max(0, d.y0 - p.depth),
+            y1: Math.max(0, d.y1 - p.depth)
+        };
+    });
 
     const t = g.transition().duration(skipTransition ? 0 : 750);
     path.transition(t)
         .tween("data", d => {
+            //console.log(d);
             const i = interpolate(d.current, d.target);
             return t => (d.current = i(t));
         })
