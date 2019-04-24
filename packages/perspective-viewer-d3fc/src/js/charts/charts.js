@@ -15,9 +15,8 @@ import yScatter from "./y-scatter";
 import xyScatter from "./xy-scatter";
 import heatmap from "./heatmap";
 import ohlc from "./ohlc";
-import candlestick from "./candlestick";
 import sunburst from "./sunburst";
 
-const chartClasses = [barChart, columnChart, lineChart, areaChart, yScatter, xyScatter, heatmap, ohlc, candlestick, sunburst];
+const chartClasses = [barChart, columnChart, lineChart, areaChart, yScatter, xyScatter, heatmap, ohlc, sunburst];
 
 export default chartClasses;
